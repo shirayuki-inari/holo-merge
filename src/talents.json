@@ -1,0 +1,431 @@
+[
+  {
+    "id": "asobi-mawari-tai",
+    "name": "アソビ★まわり隊！",
+    "year": "2026",
+    "members": [
+      {
+        "id": "achichi-mela",
+        "name": "熱千めら",
+        "en": "Achichi Mela",
+        "image": "/avatars/achichi-mela.png",
+        "source": "https://hololive.hololivepro.com/wp-content/uploads/2023/09/Achichi-Mela_list_thumb.png",
+        "url": "https://hololive.hololivepro.com/talents/achichi-mela/"
+      },
+      {
+        "id": "sorashina-sopia",
+        "name": "宙科そぴあ",
+        "en": "Sorashina Sopia",
+        "image": "/avatars/sorashina-sopia.png",
+        "source": "https://hololive.hololivepro.com/wp-content/uploads/2023/09/Sorashina-Sopia_list_thumb.png",
+        "url": "https://hololive.hololivepro.com/talents/sorashina-sopia/"
+      },
+      {
+        "id": "suzuna-tsuzuri",
+        "name": "鈴鳴つづり",
+        "en": "Suzuna Tsuzuri",
+        "image": "/avatars/suzuna-tsuzuri.png",
+        "source": "https://hololive.hololivepro.com/wp-content/uploads/2023/09/Suzuna-Tsuzuri_list_thumb.png",
+        "url": "https://hololive.hololivepro.com/talents/suzuna-tsuzuri/"
+      },
+      {
+        "id": "hyakuto-kyoko",
+        "name": "百灯キョーコ",
+        "en": "Hyakuto Kyoko",
+        "image": "/avatars/hyakuto-kyoko.png",
+        "source": "https://hololive.hololivepro.com/wp-content/uploads/2023/09/Hyakuto-Kyoko_list_thumb.png",
+        "url": "https://hololive.hololivepro.com/talents/hyakuto-kyoko/"
+      }
+    ]
+  },
+  {
+    "id": "flow-glow",
+    "name": "FLOW GLOW",
+    "year": "2024",
+    "members": [
+      {
+        "id": "isaki-riona",
+        "name": "響咲リオナ",
+        "en": "Isaki Riona",
+        "image": "/avatars/isaki-riona.png",
+        "source": "https://hololive.hololivepro.com/wp-content/uploads/2023/09/Isaki-Riona_list_thumb.png",
+        "url": "https://hololive.hololivepro.com/talents/isaki-riona/"
+      },
+      {
+        "id": "koganei-niko",
+        "name": "虎金妃笑虎",
+        "en": "Koganei Niko",
+        "image": "/avatars/koganei-niko.png",
+        "source": "https://hololive.hololivepro.com/wp-content/uploads/2023/09/Koganei-Niko_list_thumb.png",
+        "url": "https://hololive.hololivepro.com/talents/koganei-niko/"
+      },
+      {
+        "id": "mizumiya-su",
+        "name": "水宮枢",
+        "en": "Mizumiya Su",
+        "image": "/avatars/mizumiya-su.png",
+        "source": "https://hololive.hololivepro.com/wp-content/uploads/2023/09/Mizumiya-Su_list_thumb.png",
+        "url": "https://hololive.hololivepro.com/talents/mizumiya-su/"
+      },
+      {
+        "id": "rindo-chihaya",
+        "name": "輪堂千速",
+        "en": "Rindo Chihaya",
+        "image": "/avatars/rindo-chihaya.png",
+        "source": "https://hololive.hololivepro.com/wp-content/uploads/2023/09/Rindo-Chihaya_list_thumb.png",
+        "url": "https://hololive.hololivepro.com/talents/rindo-chihaya/"
+      },
+      {
+        "id": "kikirara-vivi",
+        "name": "綺々羅々ヴィヴィ",
+        "en": "Kikirara Vivi",
+        "image": "/avatars/kikirara-vivi.png",
+        "source": "https://hololive.hololivepro.com/wp-content/uploads/2023/09/Kikirara-Vivi_list_thumb.png",
+        "url": "https://hololive.hololivepro.com/talents/kikirara-vivi/"
+      }
+    ]
+  },
+  {
+    "id": "regloss",
+    "name": "ReGLOSS",
+    "year": "2023",
+    "members": [
+      {
+        "id": "otonose-kanade",
+        "name": "音乃瀬奏",
+        "en": "Otonose Kanade",
+        "image": "/avatars/otonose-kanade.png",
+        "source": "https://hololive.hololivepro.com/wp-content/uploads/2023/09/Otonose-Kanade_list_thumb.png",
+        "url": "https://hololive.hololivepro.com/talents/otonose-kanade/"
+      },
+      {
+        "id": "ichijou-ririka",
+        "name": "一条莉々華",
+        "en": "Ichijou Ririka",
+        "image": "/avatars/ichijou-ririka.png",
+        "source": "https://hololive.hololivepro.com/wp-content/uploads/2023/09/Ichijou-Ririka_list_thumb.png",
+        "url": "https://hololive.hololivepro.com/talents/ichijou-ririka/"
+      },
+      {
+        "id": "juufuutei-raden",
+        "name": "儒烏風亭らでん",
+        "en": "Juufuutei Raden",
+        "image": "/avatars/juufuutei-raden.png",
+        "source": "https://hololive.hololivepro.com/wp-content/uploads/2023/09/Juufuutei-Raden_list_thumb.png",
+        "url": "https://hololive.hololivepro.com/talents/juufuutei-raden/"
+      },
+      {
+        "id": "todoroki-hajime",
+        "name": "轟はじめ",
+        "en": "Todoroki Hajime",
+        "image": "/avatars/todoroki-hajime.png",
+        "source": "https://hololive.hololivepro.com/wp-content/uploads/2023/09/Todoroki-Hajime_list_thumb.png",
+        "url": "https://hololive.hololivepro.com/talents/todoroki-hajime/"
+      }
+    ]
+  },
+  {
+    "id": "holox",
+    "name": "秘密結社 holoX",
+    "year": "2021",
+    "members": [
+      {
+        "id": "la-darknesss",
+        "name": "ラプラス・ダークネス",
+        "en": "La+ Darknesss",
+        "image": "/avatars/la-darknesss.png",
+        "source": "https://hololive.hololivepro.com/wp-content/uploads/2020/07/La-Darknesss_list_thumb.png",
+        "url": "https://hololive.hololivepro.com/talents/la-darknesss/"
+      },
+      {
+        "id": "takane-lui",
+        "name": "鷹嶺ルイ",
+        "en": "Takane Lui",
+        "image": "/avatars/takane-lui.png",
+        "source": "https://hololive.hololivepro.com/wp-content/uploads/2020/07/Takane-Lui_list_thumb.png",
+        "url": "https://hololive.hololivepro.com/talents/takane-lui/"
+      },
+      {
+        "id": "hakui-koyori",
+        "name": "博衣こより",
+        "en": "Hakui Koyori",
+        "image": "/avatars/hakui-koyori.png",
+        "source": "https://hololive.hololivepro.com/wp-content/uploads/2020/07/Hakui-Koyori_list_thumb.png",
+        "url": "https://hololive.hololivepro.com/talents/hakui-koyori/"
+      },
+      {
+        "id": "kazama-iroha",
+        "name": "風真いろは",
+        "en": "Kazama Iroha",
+        "image": "/avatars/kazama-iroha.png",
+        "source": "https://hololive.hololivepro.com/wp-content/uploads/2020/07/Kazama-Iroha_talent_list_thumb.png",
+        "url": "https://hololive.hololivepro.com/talents/kazama-iroha/"
+      }
+    ]
+  },
+  {
+    "id": "gen-5",
+    "name": "5 期生",
+    "year": "2020",
+    "members": [
+      {
+        "id": "yukihana-lamy",
+        "name": "雪花ラミィ",
+        "en": "Yukihana Lamy",
+        "image": "/avatars/yukihana-lamy.png",
+        "source": "https://hololive.hololivepro.com/wp-content/uploads/2020/06/Yukihana-Lamy_list_thumb.png",
+        "url": "https://hololive.hololivepro.com/talents/yukihana-lamy/"
+      },
+      {
+        "id": "momosuzu-nene",
+        "name": "桃鈴ねね",
+        "en": "Momosuzu Nene",
+        "image": "/avatars/momosuzu-nene.png",
+        "source": "https://hololive.hololivepro.com/wp-content/uploads/2020/06/Momosuzu-Nene_talent_list_thumb.png",
+        "url": "https://hololive.hololivepro.com/talents/momosuzu-nene/"
+      },
+      {
+        "id": "shishiro-botan",
+        "name": "獅白ぼたん",
+        "en": "Shishiro Botan",
+        "image": "/avatars/shishiro-botan.png",
+        "source": "https://hololive.hololivepro.com/wp-content/uploads/2020/07/Shishiro-Botan_list_thumb.png",
+        "url": "https://hololive.hololivepro.com/talents/shishiro-botan/"
+      },
+      {
+        "id": "omaru-polka",
+        "name": "尾丸ポルカ",
+        "en": "Omaru Polka",
+        "image": "/avatars/omaru-polka.png",
+        "source": "https://hololive.hololivepro.com/wp-content/uploads/2020/07/Omaru-Polka_list_thumb.png",
+        "url": "https://hololive.hololivepro.com/talents/omaru-polka/"
+      }
+    ]
+  },
+  {
+    "id": "gen-4",
+    "name": "4 期生",
+    "year": "2019",
+    "members": [
+      {
+        "id": "tsunomaki-watame",
+        "name": "角巻わため",
+        "en": "Tsunomaki Watame",
+        "image": "/avatars/tsunomaki-watame.png",
+        "source": "https://hololive.hololivepro.com/wp-content/uploads/2020/06/Tsunomaki-Watame_talent_list_thumb.png",
+        "url": "https://hololive.hololivepro.com/talents/tsunomaki-watame/"
+      },
+      {
+        "id": "tokoyami-towa",
+        "name": "常闇トワ",
+        "en": "Tokoyami Towa",
+        "image": "/avatars/tokoyami-towa.png",
+        "source": "https://hololive.hololivepro.com/wp-content/uploads/2020/06/Tokoyami-Towa_list_thumb.png",
+        "url": "https://hololive.hololivepro.com/talents/tokoyami-towa/"
+      },
+      {
+        "id": "himemori-luna",
+        "name": "姫森ルーナ",
+        "en": "Himemori Luna",
+        "image": "/avatars/himemori-luna.png",
+        "source": "https://hololive.hololivepro.com/wp-content/uploads/2020/06/Himemori-Luna_list_thumb.png",
+        "url": "https://hololive.hololivepro.com/talents/himemori-luna/"
+      }
+    ]
+  },
+  {
+    "id": "gen-3",
+    "name": "3 期生",
+    "year": "2019",
+    "members": [
+      {
+        "id": "usada-pekora",
+        "name": "兎田ぺこら",
+        "en": "Usada Pekora",
+        "image": "/avatars/usada-pekora.png",
+        "source": "https://hololive.hololivepro.com/wp-content/uploads/2020/06/Usada-Pekora_list_thumb.png",
+        "url": "https://hololive.hololivepro.com/talents/usada-pekora/"
+      },
+      {
+        "id": "shiranui-flare",
+        "name": "不知火フレア",
+        "en": "Shiranui Flare",
+        "image": "/avatars/shiranui-flare.png",
+        "source": "https://hololive.hololivepro.com/wp-content/uploads/2020/06/Shiranui-Flare_list_thumb.png",
+        "url": "https://hololive.hololivepro.com/talents/shiranui-flare/"
+      },
+      {
+        "id": "shirogane-noel",
+        "name": "白銀ノエル",
+        "en": "Shirogane Noel",
+        "image": "/avatars/shirogane-noel.png",
+        "source": "https://hololive.hololivepro.com/wp-content/uploads/2020/06/Shirogane-Noel_list_thumb.png",
+        "url": "https://hololive.hololivepro.com/talents/shirogane-noel/"
+      },
+      {
+        "id": "houshou-marine",
+        "name": "宝鐘マリン",
+        "en": "Houshou Marine",
+        "image": "/avatars/houshou-marine.png",
+        "source": "https://hololive.hololivepro.com/wp-content/uploads/2020/06/Houshou-Marine_list_thumb.png",
+        "url": "https://hololive.hololivepro.com/talents/houshou-marine/"
+      }
+    ]
+  },
+  {
+    "id": "gamers",
+    "name": "GAMERS",
+    "year": "2018",
+    "members": [
+      {
+        "id": "shirakami-fubuki",
+        "name": "白上フブキ",
+        "en": "Shirakami Fubuki",
+        "image": "/avatars/shirakami-fubuki.png",
+        "source": "https://hololive.hololivepro.com/wp-content/uploads/2020/06/Shirakami-Fubuki_list_thumb.png",
+        "url": "https://hololive.hololivepro.com/talents/shirakami-fubuki/"
+      },
+      {
+        "id": "ookami-mio",
+        "name": "大神ミオ",
+        "en": "Ookami Mio",
+        "image": "/avatars/ookami-mio.png",
+        "source": "https://hololive.hololivepro.com/wp-content/uploads/2020/06/Ookami-Mio_thumb.png",
+        "url": "https://hololive.hololivepro.com/talents/ookami-mio/"
+      },
+      {
+        "id": "nekomata-okayu",
+        "name": "猫又おかゆ",
+        "en": "Nekomata Okayu",
+        "image": "/avatars/nekomata-okayu.png",
+        "source": "https://hololive.hololivepro.com/wp-content/uploads/2020/06/Nekomata-Okayu_list_thumb.png",
+        "url": "https://hololive.hololivepro.com/talents/nekomata-okayu/"
+      },
+      {
+        "id": "inugami-korone",
+        "name": "戌神ころね",
+        "en": "Inugami Korone",
+        "image": "/avatars/inugami-korone.png",
+        "source": "https://hololive.hololivepro.com/wp-content/uploads/2020/06/Inugami-Korone_talent_list_thumb.png",
+        "url": "https://hololive.hololivepro.com/talents/inugami-korone/"
+      }
+    ]
+  },
+  {
+    "id": "gen-2",
+    "name": "2 期生",
+    "year": "2018",
+    "members": [
+      {
+        "id": "nakiri-ayame",
+        "name": "百鬼あやめ",
+        "en": "Nakiri Ayame",
+        "image": "/avatars/nakiri-ayame.png",
+        "source": "https://hololive.hololivepro.com/wp-content/uploads/2020/06/Nakiri-Ayame_list_thumb.png",
+        "url": "https://hololive.hololivepro.com/talents/nakiri-ayame/"
+      },
+      {
+        "id": "yuzuki-choco",
+        "name": "癒月ちょこ",
+        "en": "Yuzuki Choco",
+        "image": "/avatars/yuzuki-choco.png",
+        "source": "https://hololive.hololivepro.com/wp-content/uploads/2020/06/Yuzuki-Choco_list_thumb.png",
+        "url": "https://hololive.hololivepro.com/talents/yuzuki-choco/"
+      },
+      {
+        "id": "oozora-subaru",
+        "name": "大空スバル",
+        "en": "Oozora Subaru",
+        "image": "/avatars/oozora-subaru.png",
+        "source": "https://hololive.hololivepro.com/wp-content/uploads/2020/06/Oozora-Subaru_list_thumb.png",
+        "url": "https://hololive.hololivepro.com/talents/oozora-subaru/"
+      }
+    ]
+  },
+  {
+    "id": "1stgen",
+    "name": "1 期生",
+    "year": "2018",
+    "members": [
+      {
+        "id": "aki-rosenthal",
+        "name": "アキ・ローゼンタール",
+        "en": "Aki Rosenthal",
+        "image": "/avatars/aki-rosenthal.png",
+        "source": "https://hololive.hololivepro.com/wp-content/uploads/2020/06/Aki-Rosenthal_list_thumb.png",
+        "url": "https://hololive.hololivepro.com/talents/aki-rosenthal/"
+      },
+      {
+        "id": "akai-haato",
+        "name": "赤井はあと",
+        "en": "Akai Haato",
+        "image": "/avatars/akai-haato.png",
+        "source": "https://hololive.hololivepro.com/wp-content/uploads/2020/06/Akai-Haato_list_thumb.png",
+        "url": "https://hololive.hololivepro.com/talents/akai-haato/"
+      },
+      {
+        "id": "shirakami-fubuki",
+        "name": "白上フブキ",
+        "en": "Shirakami Fubuki",
+        "image": "/avatars/shirakami-fubuki.png",
+        "source": "https://hololive.hololivepro.com/wp-content/uploads/2020/06/Shirakami-Fubuki_list_thumb.png",
+        "url": "https://hololive.hololivepro.com/talents/shirakami-fubuki/"
+      },
+      {
+        "id": "natsuiro-matsuri",
+        "name": "夏色まつり",
+        "en": "Natsuiro Matsuri",
+        "image": "/avatars/natsuiro-matsuri.png",
+        "source": "https://hololive.hololivepro.com/wp-content/uploads/2020/06/Natsuiro-Matsuri_list_thumb.png",
+        "url": "https://hololive.hololivepro.com/talents/natsuiro-matsuri/"
+      }
+    ]
+  },
+  {
+    "id": "gen-0",
+    "name": "0 期生",
+    "year": "2017–2019",
+    "members": [
+      {
+        "id": "tokino-sora",
+        "name": "ときのそら",
+        "en": "Tokino Sora",
+        "image": "/avatars/tokino-sora.png",
+        "source": "https://hololive.hololivepro.com/wp-content/uploads/2020/06/Tokino-Sora_list_thumb.png",
+        "url": "https://hololive.hololivepro.com/talents/tokino-sora/"
+      },
+      {
+        "id": "roboco-san",
+        "name": "ロボ子さん",
+        "en": "Robocosan",
+        "image": "/avatars/roboco-san.png",
+        "source": "https://hololive.hololivepro.com/wp-content/uploads/2020/06/Robocosan_list_thumb.png",
+        "url": "https://hololive.hololivepro.com/talents/roboco-san/"
+      },
+      {
+        "id": "azki",
+        "name": "AZKi",
+        "en": "AZKi",
+        "image": "/avatars/azki.png",
+        "source": "https://hololive.hololivepro.com/wp-content/uploads/2020/06/AZKi_list_thumb.png",
+        "url": "https://hololive.hololivepro.com/talents/azki/"
+      },
+      {
+        "id": "sakuramiko",
+        "name": "さくらみこ",
+        "en": "Sakura Miko",
+        "image": "/avatars/sakuramiko.png",
+        "source": "https://hololive.hololivepro.com/wp-content/uploads/2020/06/Sakura-Miko_talent_list_thumb.png",
+        "url": "https://hololive.hololivepro.com/talents/sakuramiko/"
+      },
+      {
+        "id": "hoshimachi-suisei",
+        "name": "星街すいせい",
+        "en": "Hoshimachi Suisei",
+        "image": "/avatars/hoshimachi-suisei.png",
+        "source": "https://hololive.hololivepro.com/wp-content/uploads/2020/06/Hoshimachi-Suisei_list_thumb.png",
+        "url": "https://hololive.hololivepro.com/talents/hoshimachi-suisei/"
+      }
+    ]
+  }
+]

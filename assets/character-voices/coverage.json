@@ -1,0 +1,139 @@
+{
+  "sourceInputs": [
+    {
+      "path": "assets/character-voices/source-00001-00039.csv",
+      "sha256": "c6fd9e6c0bbfa07cea8a6a2257362cef1ea22cd9a0335b30ba363ef446aebece",
+      "rows": 1443
+    },
+    {
+      "path": "assets/character-voices/source-06002-06005.csv",
+      "sha256": "23f867efc3e3c7ad5e47a18b8fad5c0e00bc401dd48c487392f18dcd59f6ebe7",
+      "rows": 188
+    }
+  ],
+  "sourceCsv": "assets/character-voices/source-index.csv",
+  "sourceCsvSha256": "8441c2f3b21646cbe27e3fcee5d40a6a83cda4369b0da4b177eb16a798c59554",
+  "sourceRows": 1631,
+  "totalTalents": 43,
+  "coveredTalents": 34,
+  "coveragePercent": 79.07,
+  "selectedClips": 102,
+  "events": ["drop", "merge", "win"],
+  "originalBytes": 12285144,
+  "playbackBytes": 1681950,
+  "missing": [
+    {
+      "id": "achichi-mela",
+      "name": "熱千めら",
+      "reason": "not_in_provided_csv"
+    },
+    {
+      "id": "sorashina-sopia",
+      "name": "宙科そぴあ",
+      "reason": "not_in_provided_csv"
+    },
+    {
+      "id": "suzuna-tsuzuri",
+      "name": "鈴鳴つづり",
+      "reason": "not_in_provided_csv"
+    },
+    {
+      "id": "hyakuto-kyoko",
+      "name": "百灯キョーコ",
+      "reason": "not_in_provided_csv"
+    },
+    {
+      "id": "isaki-riona",
+      "name": "響咲リオナ",
+      "reason": "not_in_provided_csv"
+    },
+    {
+      "id": "koganei-niko",
+      "name": "虎金妃笑虎",
+      "reason": "not_in_provided_csv"
+    },
+    {
+      "id": "mizumiya-su",
+      "name": "水宮枢",
+      "reason": "not_in_provided_csv"
+    },
+    {
+      "id": "rindo-chihaya",
+      "name": "輪堂千速",
+      "reason": "not_in_provided_csv"
+    },
+    {
+      "id": "kikirara-vivi",
+      "name": "綺々羅々ヴィヴィ",
+      "reason": "not_in_provided_csv"
+    }
+  ],
+  "groups": [
+    {
+      "id": "asobi-mawari-tai",
+      "name": "アソビ★まわり隊！",
+      "total": 4,
+      "covered": 0
+    },
+    {
+      "id": "flow-glow",
+      "name": "FLOW GLOW",
+      "total": 5,
+      "covered": 0
+    },
+    {
+      "id": "regloss",
+      "name": "ReGLOSS",
+      "total": 4,
+      "covered": 4
+    },
+    {
+      "id": "holox",
+      "name": "秘密結社 holoX",
+      "total": 4,
+      "covered": 4
+    },
+    {
+      "id": "gen-5",
+      "name": "5 期生",
+      "total": 4,
+      "covered": 4
+    },
+    {
+      "id": "gen-4",
+      "name": "4 期生",
+      "total": 3,
+      "covered": 3
+    },
+    {
+      "id": "gen-3",
+      "name": "3 期生",
+      "total": 4,
+      "covered": 4
+    },
+    {
+      "id": "gamers",
+      "name": "GAMERS",
+      "total": 4,
+      "covered": 4
+    },
+    {
+      "id": "gen-2",
+      "name": "2 期生",
+      "total": 3,
+      "covered": 3
+    },
+    {
+      "id": "1stgen",
+      "name": "1 期生",
+      "total": 4,
+      "covered": 4
+    },
+    {
+      "id": "gen-0",
+      "name": "0 期生",
+      "total": 5,
+      "covered": 5
+    }
+  ]
+}

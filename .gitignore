@@ -1,0 +1,13 @@
+node_modules/
+dist/
+*.tsbuildinfo
+.qa/
+release/
+
+# Local reference project, diagnostics, and machine-specific files
+/daxigua-1.0.0/
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store

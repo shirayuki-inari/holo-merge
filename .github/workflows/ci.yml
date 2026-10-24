@@ -1,0 +1,103 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test-and-package:
+    name: Test and package
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      CI: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Set up Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check types
+        run: npm run check
+
+      - name: Unit tests and asset integrity
+        run: npm test
+
+      - name: Build and package
+        run: npm run package
+
+      - name: Install Chromium
+        run: npx playwright-core install --with-deps chromium
+
+      - name: Browser gameplay and audio tests
+        shell: bash
+        run: |
+          mkdir -p .qa
+          npm run dev -- --host 127.0.0.1 --port 5173 --strictPort > .qa/vite.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          for attempt in {1..60}; do
+            if curl --fail --silent http://127.0.0.1:5173/ > /dev/null; then break; fi
+            sleep 1
+          done
+          curl --fail --silent http://127.0.0.1:5173/ > /dev/null
+          export BASE_URL=http://127.0.0.1:5173
+          npm run test:browser
+          npm run test:audio-browser
+          npm run test:character-audio
+
+      - name: Test extracted deployment package
+        shell: bash
+        run: |
+          (cd release && sha256sum --check SHA256SUMS)
+          python -m zipfile -e release/holo-merge-web.zip .qa/release-smoke
+          python -m http.server 4173 --bind 127.0.0.1 --directory .qa/release-smoke > .qa/static-server.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          for attempt in {1..60}; do
+            if curl --fail --silent http://127.0.0.1:4173/ > /dev/null; then break; fi
+            sleep 1
+          done
+          curl --fail --silent http://127.0.0.1:4173/ > /dev/null
+          BASE_URL=http://127.0.0.1:4173 npm run test:release
+
+      - name: Upload verified deployment package
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: holo-merge-web
+          path: release/
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload browser diagnostics
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: browser-diagnostics
+          path: |
+            .qa/*.png
+            .qa/*.log
+          if-no-files-found: ignore
+          retention-days: 7
