@@ -17,10 +17,14 @@
   "totalTalents": 43,
   "coveredTalents": 34,
   "coveragePercent": 79.07,
-  "selectedClips": 102,
-  "events": ["drop", "merge", "win"],
-  "originalBytes": 12285144,
-  "playbackBytes": 1681950,
+  "selectedClips": 39,
+  "events": ["merge", "win"],
+  "eventClips": {
+    "merge": 34,
+    "win": 5
+  },
+  "originalBytes": 4489808,
+  "playbackBytes": 622659,
   "missing": [
     {
       "id": "achichi-mela",

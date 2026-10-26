@@ -10,7 +10,7 @@ import wave
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-EVENTS = ('drop', 'merge', 'win')
+EVENTS = ('merge', 'win')
 EVENT_NAMES = {'drop': '投放', 'merge': '合成', 'win': '最高等级'}
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--csv', type=Path, default=ROOT / 'assets/character-voices/source-index.csv')
@@ -28,10 +28,16 @@ talents = {member['id']: member for group in groups for member in group['members
 by_name = {talent['name']: talent for talent in talents.values()}
 lookup = {(r['角色'].split(' ', 1)[0], r['文件路径']): r for r in rows}
 assert set(choices) == {r['角色'].split(' ', 1)[0] for r in rows}, 'Curate every supplied character'
+final_ids = {member['id'] for member in groups[-1]['members']}
+character_names = {r['角色'].split(' ', 1)[0]: r['角色'].split(' ', 1)[1] for r in rows}
 jobs = []
 for character_id, events in choices.items():
-    assert set(events) == set(EVENTS) and len(set(events.values())) == 3
+    talent = by_name[character_names[character_id]]
+    expected_events = {'merge', 'win'} if talent['id'] in final_ids else {'merge'}
+    assert set(events) == expected_events, 'Only retain reachable merge/win recordings'
+    assert len(set(events.values())) == len(events)
     for event in EVENTS:
+        if event not in events: continue
         filename = events[event]
         assert Path(filename).name == filename
         row = lookup[(character_id, filename)]
@@ -76,6 +82,13 @@ for job in jobs:
                        '原始WAV': str(job['copied'].relative_to(ROOT)),
                        '游戏音频': str(job['target'].relative_to(ROOT)),
                        '时长（秒）': round(job['duration'], 6)})
+# Synchronize managed asset directories so removed choices cannot remain in deployment builds.
+for folder, extension, key in [('assets/character-voices/wav', '.wav', 'copied'),
+                               ('public/audio/characters', '.mp3', 'target')]:
+    expected = {job[key] for job in jobs}
+    for path in (ROOT / folder).glob('*/*' + extension):
+        if path not in expected: path.unlink()
+
 source_inputs = [dict(path=str(path.relative_to(ROOT)), sha256=digest(path),
                       rows=sum(1 for _ in csv.DictReader(path.open(encoding='utf-8-sig', newline=''))))
                  for path in sorted((ROOT / 'assets/character-voices').glob('source-[0-9]*.csv'))]
@@ -83,6 +96,7 @@ coverage = dict(sourceInputs=source_inputs, sourceCsv='assets/character-voices/s
                 sourceRows=len(rows), totalTalents=len(talents), coveredTalents=len(catalog),
                 coveragePercent=round(100 * len(catalog) / len(talents), 2),
                 selectedClips=len(jobs), events=list(EVENTS),
+                eventClips={event: sum(job['event'] == event for job in jobs) for event in EVENTS},
                 originalBytes=sum(job['copied'].stat().st_size for job in jobs),
                 playbackBytes=sum(job['target'].stat().st_size for job in jobs),
                 missing=[dict(id=talent['id'], name=talent['name'], reason='not_in_provided_csv')

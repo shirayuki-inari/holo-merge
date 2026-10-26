@@ -92,14 +92,24 @@ try {
   );
   await page.getByRole("button", { name: "关闭背景音乐" }).click();
   await page.locator("canvas").click();
-  const expected = voices["todoroki-hajime"].drop.durationSeconds;
+  await page.waitForTimeout(500);
+  assert.deepEqual(await page.evaluate(() => window.__voiceStarts), []);
+  for (const path of [
+    "/audio/characters/todoroki-hajime/drop.mp3",
+    "/audio/characters/todoroki-hajime/win.mp3",
+    "/audio/characters/tokino-sora/drop.mp3",
+  ])
+    assert.equal((await page.request.get(base + path)).status(), 404, path);
+  // Two ReGLOSS drops merge into this lineup's holoX member.
+  await page.locator("canvas").click();
+  const expected = voices["kazama-iroha"].merge.durationSeconds;
   await page.waitForFunction(
     (duration) =>
       window.__voiceStarts.some((value) => Math.abs(value - duration) < 0.1),
     expected,
   );
   console.log(
-    "PASS production React bundle starts the selected ReGLOSS member's actual drop recording with BGM off",
+    "PASS ReGLOSS drop is silent, removed clips return 404, and the resulting holoX merge plays its recording",
   );
   for (const width of [320, 390, 768, 1280]) {
     await page.setViewportSize({ width, height: 900 });

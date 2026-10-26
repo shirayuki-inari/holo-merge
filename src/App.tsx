@@ -200,6 +200,7 @@ export default function App() {
     const instance = engine.current;
     if (!instance) return;
     const level = instance.state.current;
+    // Reserved for future drop recordings; the current catalog has no drop clips.
     if (instance.drop())
       characterEffects.current?.play("drop", lineup[level].id);
   }

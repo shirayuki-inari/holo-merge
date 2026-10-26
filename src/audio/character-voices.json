@@ -2,13 +2,6 @@
   "tokino-sora": {
     "characterId": "chr-00001",
     "name": "ときのそら",
-    "drop": {
-      "text": "わたしの出番だね！",
-      "src": "/audio/characters/tokino-sora/drop.mp3",
-      "sourceFile": "vo_sys_00001_short-positive-06.wav",
-      "sourceSha256": "bf44c4951c39d842800200460684c3a505ed458fd635fa72a523fcd1d96d486c",
-      "durationSeconds": 1.286437
-    },
     "merge": {
       "text": "いい感じだね♪",
       "src": "/audio/characters/tokino-sora/merge.mp3",
@@ -27,13 +20,6 @@
   "roboco-san": {
     "characterId": "chr-00002",
     "name": "ロボ子さん",
-    "drop": {
-      "text": "いっけー！",
-      "src": "/audio/characters/roboco-san/drop.mp3",
-      "sourceFile": "vo_sys_00002_short-go.wav",
-      "sourceSha256": "8ddec4aadde6248363fef0f41743857d3bfd04d0fdafcc1692aba570569ac6a4",
-      "durationSeconds": 1.552938
-    },
     "merge": {
       "text": "バッチリだね！",
       "src": "/audio/characters/roboco-san/merge.mp3",
@@ -52,188 +38,83 @@
   "aki-rosenthal": {
     "characterId": "chr-00004",
     "name": "アキ・ローゼンタール",
-    "drop": {
-      "text": "いっけー！",
-      "src": "/audio/characters/aki-rosenthal/drop.mp3",
-      "sourceFile": "vo_sys_00004_short-go.wav",
-      "sourceSha256": "7628c6aca2f718c001a82ce43ce05564c5a2b0e6d8651003a2493d0fcc8ac5e3",
-      "durationSeconds": 1.332188
-    },
     "merge": {
       "text": "ナイスナイス～",
       "src": "/audio/characters/aki-rosenthal/merge.mp3",
       "sourceFile": "vo_sys_00004_short-joy-02.wav",
       "sourceSha256": "89b161e29053220222779c788fdc83ecd71abb964268c431b4b5b71c8b08691e",
       "durationSeconds": 1.666667
-    },
-    "win": {
-      "text": "やったぁっ♪",
-      "src": "/audio/characters/aki-rosenthal/win.mp3",
-      "sourceFile": "vo_react_00004_glad-big-01.wav",
-      "sourceSha256": "d58d12d7e6bc80bf648128fd9b06c74559ae66d48d70463eda884edbf5797a51",
-      "durationSeconds": 0.946562
     }
   },
   "akai-haato": {
     "characterId": "chr-00005",
     "name": "赤井はあと",
-    "drop": {
-      "text": "いっけぇー！",
-      "src": "/audio/characters/akai-haato/drop.mp3",
-      "sourceFile": "vo_sys_00005_short-go.wav",
-      "sourceSha256": "402c84cdc507e0766385b4bb7a0f6dd31b80e3a7d183dad0d3f022052996c519",
-      "durationSeconds": 1.403833
-    },
     "merge": {
       "text": "すご～い！",
       "src": "/audio/characters/akai-haato/merge.mp3",
       "sourceFile": "vo_sys_00005_short-good.wav",
       "sourceSha256": "d81c8c0a141161283274716f693a8576543a35e9afd8c321a0fcb282336862b6",
       "durationSeconds": 1.282146
-    },
-    "win": {
-      "text": "やった～！",
-      "src": "/audio/characters/akai-haato/win.mp3",
-      "sourceFile": "vo_sys_00005_short-glad.wav",
-      "sourceSha256": "69f8ded957cb1deffcd38b232ae47534e15b01b28b05776b587563364568585e",
-      "durationSeconds": 1.123646
     }
   },
   "shirakami-fubuki": {
     "characterId": "chr-00006",
     "name": "白上フブキ",
-    "drop": {
-      "text": "フブキングいきます！",
-      "src": "/audio/characters/shirakami-fubuki/drop.mp3",
-      "sourceFile": "vo_sys_00006_short-positive-06.wav",
-      "sourceSha256": "ab7ee357015e8d33010d173ac5787e255ee7fc68334d4051b2bf9b24cd71a720",
-      "durationSeconds": 1.491313
-    },
     "merge": {
       "text": "ナイスゥ！",
       "src": "/audio/characters/shirakami-fubuki/merge.mp3",
       "sourceFile": "vo_sys_00006_short-joy-03.wav",
       "sourceSha256": "b80e4ad530ac318c1a0900821e883cfdfde4027eee4fbfaaa145d71ea0ab8ab4",
       "durationSeconds": 1.1015
-    },
-    "win": {
-      "text": "どんなもんじゃい！",
-      "src": "/audio/characters/shirakami-fubuki/win.mp3",
-      "sourceFile": "vo_react_00006_glad-big-04.wav",
-      "sourceSha256": "82a5dafe6599614d81795c7866558dd659eccf189791b7040192a039537cbdce",
-      "durationSeconds": 1.172813
     }
   },
   "natsuiro-matsuri": {
     "characterId": "chr-00007",
     "name": "夏色まつり",
-    "drop": {
-      "text": "いっけぇー！",
-      "src": "/audio/characters/natsuiro-matsuri/drop.mp3",
-      "sourceFile": "vo_sys_00007_short-go.wav",
-      "sourceSha256": "3f9fcb6a70f5377997b20298345153d89089f0f5f9953786718f69a40fca1adc",
-      "durationSeconds": 1.739375
-    },
     "merge": {
       "text": "いい感じ～！",
       "src": "/audio/characters/natsuiro-matsuri/merge.mp3",
       "sourceFile": "vo_sys_00007_short-joy-04.wav",
       "sourceSha256": "7ba7129f826336e9868cbe1b93f72750001345fb9d2b4c1f4c190dd1252eacea",
       "durationSeconds": 1.301917
-    },
-    "win": {
-      "text": "きちゃー！",
-      "src": "/audio/characters/natsuiro-matsuri/win.mp3",
-      "sourceFile": "vo_sys_00007_short-joy-01.wav",
-      "sourceSha256": "24e2bd902357619fd7a8acb56a19755993663002d253d877b0ef40a30d1c0e6b",
-      "durationSeconds": 1.669521
     }
   },
   "nakiri-ayame": {
     "characterId": "chr-00010",
     "name": "百鬼あやめ",
-    "drop": {
-      "text": "いざまいる！",
-      "src": "/audio/characters/nakiri-ayame/drop.mp3",
-      "sourceFile": "vo_sys_00010_short-game-start.wav",
-      "sourceSha256": "8f6e9b4e99d13be8b8d4fbc47c439dc511ef47f3bf1c3bc9eb94b2139485633d",
-      "durationSeconds": 0.878521
-    },
     "merge": {
       "text": "きたきたー！",
       "src": "/audio/characters/nakiri-ayame/merge.mp3",
       "sourceFile": "vo_sys_00010_short-joy-03.wav",
       "sourceSha256": "d1b01a5f8119bd7a080c74bcad0d2aa670f97cc2a99f24f805722d9b3fafa326",
       "durationSeconds": 0.863104
-    },
-    "win": {
-      "text": "いぇ～い！",
-      "src": "/audio/characters/nakiri-ayame/win.mp3",
-      "sourceFile": "vo_sys_00010_short-game-goal.wav",
-      "sourceSha256": "6a2f1c896555535408c00ce7b691a0d467ef2fc063e58127b7d60e954dbdf09d",
-      "durationSeconds": 1.208042
     }
   },
   "yuzuki-choco": {
     "characterId": "chr-00011",
     "name": "癒月ちょこ",
-    "drop": {
-      "text": "スタートっ♪",
-      "src": "/audio/characters/yuzuki-choco/drop.mp3",
-      "sourceFile": "vo_sys_00011_short-game-start.wav",
-      "sourceSha256": "cc52b303061e12036d70a5d0a7f150c3bdb12ca2659aa5d8505a6469a347f78d",
-      "durationSeconds": 0.945667
-    },
     "merge": {
       "text": "ナイスナイス～♪",
       "src": "/audio/characters/yuzuki-choco/merge.mp3",
       "sourceFile": "vo_sys_00011_short-joy-01.wav",
       "sourceSha256": "9f4a0380fd1fdf04c4b92a837a4147919dd070fb8344f693bc0c0da5815fc223",
       "durationSeconds": 1.758729
-    },
-    "win": {
-      "text": "やったぁ～！！",
-      "src": "/audio/characters/yuzuki-choco/win.mp3",
-      "sourceFile": "vo_react_00011_glad-big-02.wav",
-      "sourceSha256": "03a781baeecb8ce4df926d300886973dbea0ff9aa4d9697d33c6da701ef71118",
-      "durationSeconds": 1.424667
     }
   },
   "oozora-subaru": {
     "characterId": "chr-00012",
     "name": "大空スバル",
-    "drop": {
-      "text": "いっけー！",
-      "src": "/audio/characters/oozora-subaru/drop.mp3",
-      "sourceFile": "vo_sys_00012_short-go.wav",
-      "sourceSha256": "1f0591815ccfe44cca5167442209361519296678f911f5580d3d1f02467a4eef",
-      "durationSeconds": 1.228312
-    },
     "merge": {
       "text": "ナイス～！",
       "src": "/audio/characters/oozora-subaru/merge.mp3",
       "sourceFile": "vo_sys_00012_short-joy-01.wav",
       "sourceSha256": "90ffab1df98b361acc77daf208d90249204389b28f41667a55e6d827d2cff394",
       "durationSeconds": 1.060521
-    },
-    "win": {
-      "text": "最高や～！",
-      "src": "/audio/characters/oozora-subaru/win.mp3",
-      "sourceFile": "vo_sys_00012_short-joy-04.wav",
-      "sourceSha256": "87827056b11922741841222240b92d973b4f26bcdf456f51e13869b79beadfa2",
-      "durationSeconds": 1.511208
     }
   },
   "azki": {
     "characterId": "chr-00013",
     "name": "AZKi",
-    "drop": {
-      "text": "いっくよ～♪",
-      "src": "/audio/characters/azki/drop.mp3",
-      "sourceFile": "vo_sys_00013_short-start.wav",
-      "sourceSha256": "7ffd3bb91fdf342e2565cce0e2d2d87eded66c85e9c67aa23d5ccf12cd489d2f",
-      "durationSeconds": 1.035021
-    },
     "merge": {
       "text": "うれしいなあ",
       "src": "/audio/characters/azki/merge.mp3",
@@ -252,38 +133,17 @@
   "ookami-mio": {
     "characterId": "chr-00014",
     "name": "大神ミオ",
-    "drop": {
-      "text": "うちの出番だね",
-      "src": "/audio/characters/ookami-mio/drop.mp3",
-      "sourceFile": "vo_sys_00014_short-positive-06.wav",
-      "sourceSha256": "4fa31c875214cf3a684675c1ca8ddeefab284ca70f7c0074934d9fc233af14a5",
-      "durationSeconds": 0.993479
-    },
     "merge": {
       "text": "いい感じだよ～！",
       "src": "/audio/characters/ookami-mio/merge.mp3",
       "sourceFile": "vo_sys_00014_short-joy-01.wav",
       "sourceSha256": "8927962d260d7c44b9b5bf233bf0253890050dfaeebf24a753ca0f916646b832",
       "durationSeconds": 1.473958
-    },
-    "win": {
-      "text": "わ～いわ～い！",
-      "src": "/audio/characters/ookami-mio/win.mp3",
-      "sourceFile": "vo_sys_00014_short-joy-04.wav",
-      "sourceSha256": "10129cce644654e14ae10691db9b6349fe5dbacf4e3aef565857823b975e98b2",
-      "durationSeconds": 1.544354
     }
   },
   "sakuramiko": {
     "characterId": "chr-00015",
     "name": "さくらみこ",
-    "drop": {
-      "text": "いくぞー！",
-      "src": "/audio/characters/sakuramiko/drop.mp3",
-      "sourceFile": "vo_sys_00015_short-start.wav",
-      "sourceSha256": "adcb595000da7e1823d4c9888e354b37be8fe32a9d07bfe75a3ef8c1363c01a3",
-      "durationSeconds": 0.874292
-    },
     "merge": {
       "text": "ナイスゥ！",
       "src": "/audio/characters/sakuramiko/merge.mp3",
@@ -302,63 +162,28 @@
   "nekomata-okayu": {
     "characterId": "chr-00016",
     "name": "猫又おかゆ",
-    "drop": {
-      "text": "いっくよ～",
-      "src": "/audio/characters/nekomata-okayu/drop.mp3",
-      "sourceFile": "vo_sys_00016_short-start.wav",
-      "sourceSha256": "882fcf3b6d2ed14a924590b825c2a55678e4f3135b4be740bed341052c6c3d5e",
-      "durationSeconds": 1.285208
-    },
     "merge": {
       "text": "これこれ～！",
       "src": "/audio/characters/nekomata-okayu/merge.mp3",
       "sourceFile": "vo_sys_00016_short-joy-02.wav",
       "sourceSha256": "c769b7a2834fee75d9c8a4628b76c85e538978ea61e22f82f1c409c49c97b039",
       "durationSeconds": 1.161896
-    },
-    "win": {
-      "text": "きたきたきたー！",
-      "src": "/audio/characters/nekomata-okayu/win.mp3",
-      "sourceFile": "vo_react_00016_glad-big-01.wav",
-      "sourceSha256": "a909a1dd57f1667ccce8a85aced9225a1f55e194c9cae056db25ce270c7c81e6",
-      "durationSeconds": 1.885875
     }
   },
   "inugami-korone": {
     "characterId": "chr-00017",
     "name": "戌神ころね",
-    "drop": {
-      "text": "いくよぉ～！",
-      "src": "/audio/characters/inugami-korone/drop.mp3",
-      "sourceFile": "vo_react_00017_motivate-address-01.wav",
-      "sourceSha256": "6e52c7f5bcca3d5b9eaf9c5fd5273691d0b4c65c1c49a2a784e10f8e08a287d5",
-      "durationSeconds": 1.199875
-    },
     "merge": {
       "text": "いいよいいよ～！",
       "src": "/audio/characters/inugami-korone/merge.mp3",
       "sourceFile": "vo_sys_00017_short-joy-01.wav",
       "sourceSha256": "df5a7d59b5b396d34437f6f0f8b3210213a9c073386c10f90eb8043c4ed0a7ea",
       "durationSeconds": 1.30675
-    },
-    "win": {
-      "text": "イェイイェイイェイ！",
-      "src": "/audio/characters/inugami-korone/win.mp3",
-      "sourceFile": "vo_sys_00017_short-game-goal.wav",
-      "sourceSha256": "87dbea461352c3c02220f4fbd93f3c3f84af6a402afe14071e33002be9787768",
-      "durationSeconds": 1.374208
     }
   },
   "hoshimachi-suisei": {
     "characterId": "chr-00018",
     "name": "星街すいせい",
-    "drop": {
-      "text": "いっくぞぉ～",
-      "src": "/audio/characters/hoshimachi-suisei/drop.mp3",
-      "sourceFile": "vo_sys_00018_short-start.wav",
-      "sourceSha256": "26e13aac8cae4cc3692a71a8abb572a216bc4515d3980c9628ba98b027ffb8ae",
-      "durationSeconds": 1.062458
-    },
     "merge": {
       "text": "いいよいいよ～",
       "src": "/audio/characters/hoshimachi-suisei/merge.mp3",
@@ -377,476 +202,210 @@
   "usada-pekora": {
     "characterId": "chr-00019",
     "name": "兎田ぺこら",
-    "drop": {
-      "text": "ぺこーら、レディー！",
-      "src": "/audio/characters/usada-pekora/drop.mp3",
-      "sourceFile": "vo_sys_00019_short-positive-06.wav",
-      "sourceSha256": "8c4ebf51f07ca1ae2e1d3f6f0c249602692da2cffcc3d9354584ffead5ef84ed",
-      "durationSeconds": 1.841729
-    },
     "merge": {
       "text": "ナイスゥ！",
       "src": "/audio/characters/usada-pekora/merge.mp3",
       "sourceFile": "vo_sys_00019_short-joy-02.wav",
       "sourceSha256": "7ae5890948b92ff7f1ea566d9495064b1d58d87debc097078691556bbdbeb2c2",
       "durationSeconds": 1.150521
-    },
-    "win": {
-      "text": "イェーイイェーイ！",
-      "src": "/audio/characters/usada-pekora/win.mp3",
-      "sourceFile": "vo_react_00019_glad-big-01.wav",
-      "sourceSha256": "eccb2d949f6f587e90385d53a2a8cf8826b9e594a1ac1a58f2623db47d4f5b0c",
-      "durationSeconds": 1.813271
     }
   },
   "shiranui-flare": {
     "characterId": "chr-00021",
     "name": "不知火フレア",
-    "drop": {
-      "text": "いっけー！",
-      "src": "/audio/characters/shiranui-flare/drop.mp3",
-      "sourceFile": "vo_sys_00021_short-go.wav",
-      "sourceSha256": "db7bdc6e8a0b6f91f7a159efde5125f85d73f63a727300ffe10fc5a3cb57dc93",
-      "durationSeconds": 1.405125
-    },
     "merge": {
       "text": "いいね！",
       "src": "/audio/characters/shiranui-flare/merge.mp3",
       "sourceFile": "vo_sys_00021_short-good.wav",
       "sourceSha256": "4be28aa8f74b7d8619176da75745ddb580eac158c4886d5c38d8644be4e1225c",
       "durationSeconds": 0.682
-    },
-    "win": {
-      "text": "やったやったー！",
-      "src": "/audio/characters/shiranui-flare/win.mp3",
-      "sourceFile": "vo_sys_00021_short-joy-01.wav",
-      "sourceSha256": "7a76405c11ccedeb5fa8d97e6f481adc6aef1aeabee2ef1ef7f896a4260cf59f",
-      "durationSeconds": 1.464292
     }
   },
   "shirogane-noel": {
     "characterId": "chr-00022",
     "name": "白銀ノエル",
-    "drop": {
-      "text": "いけー！",
-      "src": "/audio/characters/shirogane-noel/drop.mp3",
-      "sourceFile": "vo_sys_00022_short-go.wav",
-      "sourceSha256": "d4c062557b51a824072b43b34d4b882f35894ee0dee1bfad758f1ef6d2fecce3",
-      "durationSeconds": 0.832
-    },
     "merge": {
       "text": "よしよし～♪",
       "src": "/audio/characters/shirogane-noel/merge.mp3",
       "sourceFile": "vo_sys_00022_short-good.wav",
       "sourceSha256": "8edbc6e009a9fe5c29e7ee6510701900e92ba66be2ad1a72f36b50dae5422dee",
       "durationSeconds": 0.893917
-    },
-    "win": {
-      "text": "やったー！",
-      "src": "/audio/characters/shirogane-noel/win.mp3",
-      "sourceFile": "vo_sys_00022_short-glad.wav",
-      "sourceSha256": "79f5a1e46c1427a98b690ad754f6c01ef6dbb41d6c98ff8a73adb7b35ec961c1",
-      "durationSeconds": 0.825937
     }
   },
   "houshou-marine": {
     "characterId": "chr-00023",
     "name": "宝鐘マリン",
-    "drop": {
-      "text": "さあ、いきますよ～",
-      "src": "/audio/characters/houshou-marine/drop.mp3",
-      "sourceFile": "vo_sys_00023_short-start.wav",
-      "sourceSha256": "a6a60a10494d06e18503e056a3db821e460b7ef0a103f90d1a645a0c0f2a0097",
-      "durationSeconds": 1.007646
-    },
     "merge": {
       "text": "ナイスナイス～！",
       "src": "/audio/characters/houshou-marine/merge.mp3",
       "sourceFile": "vo_sys_00023_short-good.wav",
       "sourceSha256": "7bbdad2d8b727eda36531ab4cfcb6a248822f6da0a36ed2dc0e2831da1403571",
       "durationSeconds": 1.290042
-    },
-    "win": {
-      "text": "おっしゃぁー！",
-      "src": "/audio/characters/houshou-marine/win.mp3",
-      "sourceFile": "vo_sys_00023_short-game-goal.wav",
-      "sourceSha256": "c13076b90c525a1195b461ae97ffefe0381b2c7cb8040a2e98adbdd706cf4206",
-      "durationSeconds": 0.918146
     }
   },
   "tsunomaki-watame": {
     "characterId": "chr-00026",
     "name": "角巻わため",
-    "drop": {
-      "text": "わため、いっくぞ～♪",
-      "src": "/audio/characters/tsunomaki-watame/drop.mp3",
-      "sourceFile": "vo_sys_00026_short-start.wav",
-      "sourceSha256": "fde980abd693ca70d78d17cab779b3a07d063b80ea9001c2a479a5da0b5645f8",
-      "durationSeconds": 1.867646
-    },
     "merge": {
       "text": "ナイスだー！",
       "src": "/audio/characters/tsunomaki-watame/merge.mp3",
       "sourceFile": "vo_sys_00026_short-joy-02.wav",
       "sourceSha256": "02a8446c926231737110469eb39ba4dff75dfef73436c4034aa3e902d8a0754e",
       "durationSeconds": 1.271771
-    },
-    "win": {
-      "text": "さいこうっ♪",
-      "src": "/audio/characters/tsunomaki-watame/win.mp3",
-      "sourceFile": "vo_sys_00026_short-joy-04.wav",
-      "sourceSha256": "28eb00bcf57117578af41337711184709d9fd36b70728a8054bdd113749a729d",
-      "durationSeconds": 1.316271
     }
   },
   "tokoyami-towa": {
     "characterId": "chr-00027",
     "name": "常闇トワ",
-    "drop": {
-      "text": "いきます！",
-      "src": "/audio/characters/tokoyami-towa/drop.mp3",
-      "sourceFile": "vo_sys_00027_short-high-03.wav",
-      "sourceSha256": "9c01e02aa310796b2bf375b0a5d9b3816254ab0f695c6973bcb32aa2a889481e",
-      "durationSeconds": 0.768
-    },
     "merge": {
       "text": "いいね～",
       "src": "/audio/characters/tokoyami-towa/merge.mp3",
       "sourceFile": "vo_sys_00027_short-joy-01.wav",
       "sourceSha256": "feeeebf492d46d49514f0e4012651662aabb01d3102cbd5267083b5897ff3fb4",
       "durationSeconds": 1.136458
-    },
-    "win": {
-      "text": "イエーイ！",
-      "src": "/audio/characters/tokoyami-towa/win.mp3",
-      "sourceFile": "vo_sys_00027_short-glad.wav",
-      "sourceSha256": "12a47f9a2be71d732f4956312d8e6c8a12e0438cac12d25de7c11a4d40ebd834",
-      "durationSeconds": 0.663417
     }
   },
   "himemori-luna": {
     "characterId": "chr-00028",
     "name": "姫森ルーナ",
-    "drop": {
-      "text": "いくのらよ～♪",
-      "src": "/audio/characters/himemori-luna/drop.mp3",
-      "sourceFile": "vo_sys_00028_short-start.wav",
-      "sourceSha256": "12ea516483abaa0b40be6d847fe211a770ef68e4cabbea4fca6c3a114bddccd1",
-      "durationSeconds": 1.437312
-    },
     "merge": {
       "text": "ふっふっふ～♪",
       "src": "/audio/characters/himemori-luna/merge.mp3",
       "sourceFile": "vo_sys_00028_short-joy-02.wav",
       "sourceSha256": "3c03df8c70bf8283606701a4dd5614d5c88ce26f24d467db93f83a62486d8e3a",
       "durationSeconds": 2.216125
-    },
-    "win": {
-      "text": "やったのらー♪",
-      "src": "/audio/characters/himemori-luna/win.mp3",
-      "sourceFile": "vo_sys_00028_short-glad.wav",
-      "sourceSha256": "ad7c0392068dc6ac99048fdf79e5adbf20fd5030e4b8e77cfe2cb5dd500eaf89",
-      "durationSeconds": 1.502917
     }
   },
   "yukihana-lamy": {
     "characterId": "chr-00030",
     "name": "雪花ラミィ",
-    "drop": {
-      "text": "いっきま～す",
-      "src": "/audio/characters/yukihana-lamy/drop.mp3",
-      "sourceFile": "vo_sys_00030_short-start.wav",
-      "sourceSha256": "e900af8f76223d31c74cf73f8402fa9b0610c4affb1c0d08e32ddd0ddd3dc37f",
-      "durationSeconds": 1.634833
-    },
     "merge": {
       "text": "いいじゃーん！",
       "src": "/audio/characters/yukihana-lamy/merge.mp3",
       "sourceFile": "vo_sys_00030_short-good.wav",
       "sourceSha256": "522b4957f3e5d95fa24d8b323f66b33db1a756d35c5a274ea8bec5a3a1b5912e",
       "durationSeconds": 0.874812
-    },
-    "win": {
-      "text": "やったやったぁ～！",
-      "src": "/audio/characters/yukihana-lamy/win.mp3",
-      "sourceFile": "vo_sys_00030_short-joy-01.wav",
-      "sourceSha256": "a034e2c3e57c27b0373340e6ed07cd9acca7256744345dc490dc44288dba48bd",
-      "durationSeconds": 1.790792
     }
   },
   "momosuzu-nene": {
     "characterId": "chr-00031",
     "name": "桃鈴ねね",
-    "drop": {
-      "text": "よし、やってくよん♪",
-      "src": "/audio/characters/momosuzu-nene/drop.mp3",
-      "sourceFile": "vo_sys_00031_short-start.wav",
-      "sourceSha256": "995c5d01f64f158439a5d06362bb7651feb6f8587c29fbc599d3f590c2b6a059",
-      "durationSeconds": 1.690917
-    },
     "merge": {
       "text": "はい、ナイス～！",
       "src": "/audio/characters/momosuzu-nene/merge.mp3",
       "sourceFile": "vo_sys_00031_short-good.wav",
       "sourceSha256": "e5b34dc8a41c22f99c4e5957050fa4cab49f723c0a5886ba21e6810b167b304a",
       "durationSeconds": 2.226625
-    },
-    "win": {
-      "text": "やったやったーっ！",
-      "src": "/audio/characters/momosuzu-nene/win.mp3",
-      "sourceFile": "vo_sys_00031_short-joy-04.wav",
-      "sourceSha256": "a6bcdd9662c8881b2ab3eb89ad529ba23e3a74e3fb5e322b107823c79b0746ef",
-      "durationSeconds": 1.980187
     }
   },
   "shishiro-botan": {
     "characterId": "chr-00032",
     "name": "獅白ぼたん",
-    "drop": {
-      "text": "よし、いくか",
-      "src": "/audio/characters/shishiro-botan/drop.mp3",
-      "sourceFile": "vo_sys_00032_short-start.wav",
-      "sourceSha256": "95dec2dd5ad011decb9f2ea3218bde86213ab587f9a0a4734210389db6981163",
-      "durationSeconds": 0.990479
-    },
     "merge": {
       "text": "ナイス～",
       "src": "/audio/characters/shishiro-botan/merge.mp3",
       "sourceFile": "vo_sys_00032_short-joy-03.wav",
       "sourceSha256": "39e08f375c4805b0e5d6436fed20072f66e95e5bf70cfabc7d287a5368ef71f8",
       "durationSeconds": 0.918229
-    },
-    "win": {
-      "text": "やったぜ",
-      "src": "/audio/characters/shishiro-botan/win.mp3",
-      "sourceFile": "vo_sys_00032_short-glad.wav",
-      "sourceSha256": "fc5bf21c35fd28109b2f1bd1579179dd8ed09b768411ab42c00b3cd5ac9641ad",
-      "durationSeconds": 0.675583
     }
   },
   "omaru-polka": {
     "characterId": "chr-00034",
     "name": "尾丸ポルカ",
-    "drop": {
-      "text": "ほい、スタート",
-      "src": "/audio/characters/omaru-polka/drop.mp3",
-      "sourceFile": "vo_sys_00034_short-start.wav",
-      "sourceSha256": "cbb6d37ade57cc68ce08826d21776d66ae8c06cb6bdc50cb4dcfc92c638e73d3",
-      "durationSeconds": 1.278708
-    },
     "merge": {
       "text": "ナイスゥ！",
       "src": "/audio/characters/omaru-polka/merge.mp3",
       "sourceFile": "vo_sys_00034_short-joy-02.wav",
       "sourceSha256": "2e87d911f70dec35e4dffc7c5c5f0038b24228af8b1f91eb71de92e1cd22fa83",
       "durationSeconds": 0.934271
-    },
-    "win": {
-      "text": "きたぁぁぁぁ！",
-      "src": "/audio/characters/omaru-polka/win.mp3",
-      "sourceFile": "vo_react_00034_glad-big-02.wav",
-      "sourceSha256": "4ded25c293ba1ef0dbddc6a4ddecbc324af715f9ed4657dfe3c969c0ac06fdbf",
-      "durationSeconds": 1.357229
     }
   },
   "la-darknesss": {
     "characterId": "chr-00035",
     "name": "ラプラス・ダークネス",
-    "drop": {
-      "text": "はじめるよ～",
-      "src": "/audio/characters/la-darknesss/drop.mp3",
-      "sourceFile": "vo_sys_00035_short-start.wav",
-      "sourceSha256": "b0019ffadbe4092217a0251e2cb607ac252beceeceb9561d81470dd07dbe423f",
-      "durationSeconds": 1.158708
-    },
     "merge": {
       "text": "ナイス～",
       "src": "/audio/characters/la-darknesss/merge.mp3",
       "sourceFile": "vo_sys_00035_short-joy-02.wav",
       "sourceSha256": "66ed232c1ac77bfb4cf5f30920f2a293d1931af9bf89282b958b1f23f73a02eb",
       "durationSeconds": 0.696229
-    },
-    "win": {
-      "text": "マジで神～！",
-      "src": "/audio/characters/la-darknesss/win.mp3",
-      "sourceFile": "vo_sys_00035_short-joy-04.wav",
-      "sourceSha256": "d48123a23542e9154bef48dec28ebb5f431a0dfc8924eb6bec85dbdda74b893a",
-      "durationSeconds": 1.618313
     }
   },
   "takane-lui": {
     "characterId": "chr-00036",
     "name": "鷹嶺ルイ",
-    "drop": {
-      "text": "いっくよ～！",
-      "src": "/audio/characters/takane-lui/drop.mp3",
-      "sourceFile": "vo_sys_00036_short-game-start.wav",
-      "sourceSha256": "1cf58bd95fd3a4bcd47fcfd476b2fceefff2e46d84ffad202895d9fe1a5993be",
-      "durationSeconds": 1.276146
-    },
     "merge": {
       "text": "ナイス～！",
       "src": "/audio/characters/takane-lui/merge.mp3",
       "sourceFile": "vo_sys_00036_short-joy-03.wav",
       "sourceSha256": "dac9374a3b147fd7ea7df1843e3dd902fd37bb33c9bc86a282f6f499f13037d4",
       "durationSeconds": 1.229854
-    },
-    "win": {
-      "text": "よっしゃー！",
-      "src": "/audio/characters/takane-lui/win.mp3",
-      "sourceFile": "vo_sys_00036_short-joy-01.wav",
-      "sourceSha256": "0e4b9c349e2f85c3d7bc616ef4b8757637437ef2ea36bd68a4315684c3c9473d",
-      "durationSeconds": 1.111917
     }
   },
   "hakui-koyori": {
     "characterId": "chr-00037",
     "name": "博衣こより",
-    "drop": {
-      "text": "いっくよ～",
-      "src": "/audio/characters/hakui-koyori/drop.mp3",
-      "sourceFile": "vo_sys_00037_short-start.wav",
-      "sourceSha256": "a296e34ab16252f00e1c2e43566ed30dde4922a01438ca9f22087f464a849bdd",
-      "durationSeconds": 1.925917
-    },
     "merge": {
       "text": "バッチリ！",
       "src": "/audio/characters/hakui-koyori/merge.mp3",
       "sourceFile": "vo_sys_00037_short-positive-03.wav",
       "sourceSha256": "baac20a39b59954ebf9728fb23a7dcf8600db9141dbd67a8b3e69ab57082d3bc",
       "durationSeconds": 1.079979
-    },
-    "win": {
-      "text": "やったやったー！",
-      "src": "/audio/characters/hakui-koyori/win.mp3",
-      "sourceFile": "vo_sys_00037_short-joy-03.wav",
-      "sourceSha256": "a3bda6f3b7abeecbbddd4d4732d11aef0b68dc51044b1172209fd61ac185349b",
-      "durationSeconds": 1.859833
     }
   },
   "kazama-iroha": {
     "characterId": "chr-00039",
     "name": "風真いろは",
-    "drop": {
-      "text": "いくでござるよ～",
-      "src": "/audio/characters/kazama-iroha/drop.mp3",
-      "sourceFile": "vo_sys_00039_short-start.wav",
-      "sourceSha256": "55a12c8359b780341af73a941385173f6c6afdbb15e92498789018becda706f0",
-      "durationSeconds": 1.480187
-    },
     "merge": {
       "text": "きた～！",
       "src": "/audio/characters/kazama-iroha/merge.mp3",
       "sourceFile": "vo_sys_00039_short-joy-01.wav",
       "sourceSha256": "f14a33ceeedfa9fa04660e6ceff001dae0cbd86cc8081875267ec26b0f2e51fe",
       "durationSeconds": 0.919854
-    },
-    "win": {
-      "text": "イェーイ！",
-      "src": "/audio/characters/kazama-iroha/win.mp3",
-      "sourceFile": "vo_sys_00039_short-game-goal.wav",
-      "sourceSha256": "2ace53bf47ea68764b7def8663144adad8003a41172c3f9e5bd8b8ed51341a3f",
-      "durationSeconds": 1.188396
     }
   },
   "otonose-kanade": {
     "characterId": "chr-06002",
     "name": "音乃瀬奏",
-    "drop": {
-      "text": "いっくよぉ～♪",
-      "src": "/audio/characters/otonose-kanade/drop.mp3",
-      "sourceFile": "vo_sys_06002_short-start.wav",
-      "sourceSha256": "cb6c64a0741658b27684d4f32759723ea0eaedc32cf260d91e637f9105c90de7",
-      "durationSeconds": 1.279208
-    },
     "merge": {
       "text": "いいねいいね～♪",
       "src": "/audio/characters/otonose-kanade/merge.mp3",
       "sourceFile": "vo_sys_06002_short-joy-01.wav",
       "sourceSha256": "3c1c8f9d8bffcf2a2b64908459391f80c2f99d3751a6ec2550245b43fc0c876d",
       "durationSeconds": 0.930104
-    },
-    "win": {
-      "text": "どうだ～～！",
-      "src": "/audio/characters/otonose-kanade/win.mp3",
-      "sourceFile": "vo_sys_06002_short-game-goal.wav",
-      "sourceSha256": "70db5b684d75ff9623aeb2301601112ab540bb403e16cc2227554318d398e21c",
-      "durationSeconds": 1.324333
     }
   },
   "ichijou-ririka": {
     "characterId": "chr-06003",
     "name": "一条莉々華",
-    "drop": {
-      "text": "いっくぞ～♪",
-      "src": "/audio/characters/ichijou-ririka/drop.mp3",
-      "sourceFile": "vo_sys_06003_short-start.wav",
-      "sourceSha256": "a256079496e6481e750313ff0f7c8eb74600043a426358b87f3a41d86f2bec18",
-      "durationSeconds": 1.299354
-    },
     "merge": {
       "text": "ナイスぅ！",
       "src": "/audio/characters/ichijou-ririka/merge.mp3",
       "sourceFile": "vo_sys_06003_short-joy-03.wav",
       "sourceSha256": "86115e2f580e88489a5acfd73a8def1fd6a1761b6502c91d90395502d5041bea",
       "durationSeconds": 1.036396
-    },
-    "win": {
-      "text": "イエーーイ！",
-      "src": "/audio/characters/ichijou-ririka/win.mp3",
-      "sourceFile": "vo_sys_06003_short-game-goal.wav",
-      "sourceSha256": "6b353b7bd00f03ac629d62206e8506d6a13f7b685f0758d43ad4f70e24ebe735",
-      "durationSeconds": 0.9965
     }
   },
   "juufuutei-raden": {
     "characterId": "chr-06004",
     "name": "儒烏風亭らでん",
-    "drop": {
-      "text": "いきます！",
-      "src": "/audio/characters/juufuutei-raden/drop.mp3",
-      "sourceFile": "vo_sys_06004_short-positive-03.wav",
-      "sourceSha256": "93b894d2c79598f7b8d6d75d127026081430bb5578ca9c919a8de65eb052bcaa",
-      "durationSeconds": 0.687375
-    },
     "merge": {
       "text": "いいですね～！",
       "src": "/audio/characters/juufuutei-raden/merge.mp3",
       "sourceFile": "vo_sys_06004_short-good.wav",
       "sourceSha256": "c4db4357a73807a6e26e581a55952d9787348f6b28501e7ceea07413dcc55697",
       "durationSeconds": 1.352479
-    },
-    "win": {
-      "text": "やったやったー！",
-      "src": "/audio/characters/juufuutei-raden/win.mp3",
-      "sourceFile": "vo_sys_06004_short-game-goal.wav",
-      "sourceSha256": "264ed6d8b906e45d5643a95b250ad470e420d2f505a168090c72716c50f086ef",
-      "durationSeconds": 1.306563
     }
   },
   "todoroki-hajime": {
     "characterId": "chr-06005",
     "name": "轟はじめ",
-    "drop": {
-      "text": "いっくじょ～",
-      "src": "/audio/characters/todoroki-hajime/drop.mp3",
-      "sourceFile": "vo_sys_06005_short-start.wav",
-      "sourceSha256": "8e7d767b266dbbe66142c0179579dbe499567b1e14bb216a5b565f8e9efb836a",
-      "durationSeconds": 0.920229
-    },
     "merge": {
       "text": "いいじゃん",
       "src": "/audio/characters/todoroki-hajime/merge.mp3",
       "sourceFile": "vo_sys_06005_short-good.wav",
       "sourceSha256": "8ff45dab4346cd10459f8ac4a4e506a07fa7df2c51f2dc54a6e3a2281f99ba38",
       "durationSeconds": 0.558979
-    },
-    "win": {
-      "text": "やったじぇっ！",
-      "src": "/audio/characters/todoroki-hajime/win.mp3",
-      "sourceFile": "vo_sys_06005_short-glad.wav",
-      "sourceSha256": "86db032b9d9b97b55a6a722370cf411938a575045c7d812ea47c4af2be1c2e1d",
-      "durationSeconds": 0.507313
     }
   }
 }

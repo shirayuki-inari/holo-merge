@@ -1,172 +1,109 @@
 {
   "chr-00001": {
-    "drop": "vo_sys_00001_short-positive-06.wav",
     "merge": "vo_sys_00001_short-joy-02.wav",
     "win": "vo_sys_00001_short-joy-01.wav"
   },
   "chr-00002": {
-    "drop": "vo_sys_00002_short-go.wav",
     "merge": "vo_sys_00002_short-joy-04.wav",
     "win": "vo_sys_00002_short-glad.wav"
   },
   "chr-00004": {
-    "drop": "vo_sys_00004_short-go.wav",
-    "merge": "vo_sys_00004_short-joy-02.wav",
-    "win": "vo_react_00004_glad-big-01.wav"
+    "merge": "vo_sys_00004_short-joy-02.wav"
   },
   "chr-00005": {
-    "drop": "vo_sys_00005_short-go.wav",
-    "merge": "vo_sys_00005_short-good.wav",
-    "win": "vo_sys_00005_short-glad.wav"
+    "merge": "vo_sys_00005_short-good.wav"
   },
   "chr-00006": {
-    "drop": "vo_sys_00006_short-positive-06.wav",
-    "merge": "vo_sys_00006_short-joy-03.wav",
-    "win": "vo_react_00006_glad-big-04.wav"
+    "merge": "vo_sys_00006_short-joy-03.wav"
   },
   "chr-00007": {
-    "drop": "vo_sys_00007_short-go.wav",
-    "merge": "vo_sys_00007_short-joy-04.wav",
-    "win": "vo_sys_00007_short-joy-01.wav"
+    "merge": "vo_sys_00007_short-joy-04.wav"
   },
   "chr-00010": {
-    "drop": "vo_sys_00010_short-game-start.wav",
-    "merge": "vo_sys_00010_short-joy-03.wav",
-    "win": "vo_sys_00010_short-game-goal.wav"
+    "merge": "vo_sys_00010_short-joy-03.wav"
   },
   "chr-00011": {
-    "drop": "vo_sys_00011_short-game-start.wav",
-    "merge": "vo_sys_00011_short-joy-01.wav",
-    "win": "vo_react_00011_glad-big-02.wav"
+    "merge": "vo_sys_00011_short-joy-01.wav"
   },
   "chr-00012": {
-    "drop": "vo_sys_00012_short-go.wav",
-    "merge": "vo_sys_00012_short-joy-01.wav",
-    "win": "vo_sys_00012_short-joy-04.wav"
+    "merge": "vo_sys_00012_short-joy-01.wav"
   },
   "chr-00013": {
-    "drop": "vo_sys_00013_short-start.wav",
     "merge": "vo_sys_00013_short-joy-02.wav",
     "win": "vo_sys_00013_short-glad.wav"
   },
   "chr-00014": {
-    "drop": "vo_sys_00014_short-positive-06.wav",
-    "merge": "vo_sys_00014_short-joy-01.wav",
-    "win": "vo_sys_00014_short-joy-04.wav"
+    "merge": "vo_sys_00014_short-joy-01.wav"
   },
   "chr-00015": {
-    "drop": "vo_sys_00015_short-start.wav",
     "merge": "vo_sys_00015_short-joy-01.wav",
     "win": "vo_sys_00015_short-glad.wav"
   },
   "chr-00016": {
-    "drop": "vo_sys_00016_short-start.wav",
-    "merge": "vo_sys_00016_short-joy-02.wav",
-    "win": "vo_react_00016_glad-big-01.wav"
+    "merge": "vo_sys_00016_short-joy-02.wav"
   },
   "chr-00017": {
-    "drop": "vo_react_00017_motivate-address-01.wav",
-    "merge": "vo_sys_00017_short-joy-01.wav",
-    "win": "vo_sys_00017_short-game-goal.wav"
+    "merge": "vo_sys_00017_short-joy-01.wav"
   },
   "chr-00018": {
-    "drop": "vo_sys_00018_short-start.wav",
     "merge": "vo_sys_00018_short-joy-02.wav",
     "win": "vo_sys_00018_short-joy-04.wav"
   },
   "chr-00019": {
-    "drop": "vo_sys_00019_short-positive-06.wav",
-    "merge": "vo_sys_00019_short-joy-02.wav",
-    "win": "vo_react_00019_glad-big-01.wav"
+    "merge": "vo_sys_00019_short-joy-02.wav"
   },
   "chr-00021": {
-    "drop": "vo_sys_00021_short-go.wav",
-    "merge": "vo_sys_00021_short-good.wav",
-    "win": "vo_sys_00021_short-joy-01.wav"
+    "merge": "vo_sys_00021_short-good.wav"
   },
   "chr-00022": {
-    "drop": "vo_sys_00022_short-go.wav",
-    "merge": "vo_sys_00022_short-good.wav",
-    "win": "vo_sys_00022_short-glad.wav"
+    "merge": "vo_sys_00022_short-good.wav"
   },
   "chr-00023": {
-    "drop": "vo_sys_00023_short-start.wav",
-    "merge": "vo_sys_00023_short-good.wav",
-    "win": "vo_sys_00023_short-game-goal.wav"
+    "merge": "vo_sys_00023_short-good.wav"
   },
   "chr-00026": {
-    "drop": "vo_sys_00026_short-start.wav",
-    "merge": "vo_sys_00026_short-joy-02.wav",
-    "win": "vo_sys_00026_short-joy-04.wav"
+    "merge": "vo_sys_00026_short-joy-02.wav"
   },
   "chr-00027": {
-    "drop": "vo_sys_00027_short-high-03.wav",
-    "merge": "vo_sys_00027_short-joy-01.wav",
-    "win": "vo_sys_00027_short-glad.wav"
+    "merge": "vo_sys_00027_short-joy-01.wav"
   },
   "chr-00028": {
-    "drop": "vo_sys_00028_short-start.wav",
-    "merge": "vo_sys_00028_short-joy-02.wav",
-    "win": "vo_sys_00028_short-glad.wav"
+    "merge": "vo_sys_00028_short-joy-02.wav"
   },
   "chr-00030": {
-    "drop": "vo_sys_00030_short-start.wav",
-    "merge": "vo_sys_00030_short-good.wav",
-    "win": "vo_sys_00030_short-joy-01.wav"
+    "merge": "vo_sys_00030_short-good.wav"
   },
   "chr-00031": {
-    "drop": "vo_sys_00031_short-start.wav",
-    "merge": "vo_sys_00031_short-good.wav",
-    "win": "vo_sys_00031_short-joy-04.wav"
+    "merge": "vo_sys_00031_short-good.wav"
   },
   "chr-00032": {
-    "drop": "vo_sys_00032_short-start.wav",
-    "merge": "vo_sys_00032_short-joy-03.wav",
-    "win": "vo_sys_00032_short-glad.wav"
+    "merge": "vo_sys_00032_short-joy-03.wav"
   },
   "chr-00034": {
-    "drop": "vo_sys_00034_short-start.wav",
-    "merge": "vo_sys_00034_short-joy-02.wav",
-    "win": "vo_react_00034_glad-big-02.wav"
+    "merge": "vo_sys_00034_short-joy-02.wav"
   },
   "chr-00035": {
-    "drop": "vo_sys_00035_short-start.wav",
-    "merge": "vo_sys_00035_short-joy-02.wav",
-    "win": "vo_sys_00035_short-joy-04.wav"
+    "merge": "vo_sys_00035_short-joy-02.wav"
   },
   "chr-00036": {
-    "drop": "vo_sys_00036_short-game-start.wav",
-    "merge": "vo_sys_00036_short-joy-03.wav",
-    "win": "vo_sys_00036_short-joy-01.wav"
+    "merge": "vo_sys_00036_short-joy-03.wav"
   },
   "chr-00037": {
-    "drop": "vo_sys_00037_short-start.wav",
-    "merge": "vo_sys_00037_short-positive-03.wav",
-    "win": "vo_sys_00037_short-joy-03.wav"
+    "merge": "vo_sys_00037_short-positive-03.wav"
   },
   "chr-00039": {
-    "drop": "vo_sys_00039_short-start.wav",
-    "merge": "vo_sys_00039_short-joy-01.wav",
-    "win": "vo_sys_00039_short-game-goal.wav"
+    "merge": "vo_sys_00039_short-joy-01.wav"
   },
   "chr-06002": {
-    "drop": "vo_sys_06002_short-start.wav",
-    "merge": "vo_sys_06002_short-joy-01.wav",
-    "win": "vo_sys_06002_short-game-goal.wav"
+    "merge": "vo_sys_06002_short-joy-01.wav"
   },
   "chr-06003": {
-    "drop": "vo_sys_06003_short-start.wav",
-    "merge": "vo_sys_06003_short-joy-03.wav",
-    "win": "vo_sys_06003_short-game-goal.wav"
+    "merge": "vo_sys_06003_short-joy-03.wav"
   },
   "chr-06004": {
-    "drop": "vo_sys_06004_short-positive-03.wav",
-    "merge": "vo_sys_06004_short-good.wav",
-    "win": "vo_sys_06004_short-game-goal.wav"
+    "merge": "vo_sys_06004_short-good.wav"
   },
   "chr-06005": {
-    "drop": "vo_sys_06005_short-start.wav",
-    "merge": "vo_sys_06005_short-good.wav",
-    "win": "vo_sys_06005_short-glad.wav"
+    "merge": "vo_sys_06005_short-good.wav"
   }
 }

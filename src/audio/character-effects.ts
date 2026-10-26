@@ -13,16 +13,20 @@ export interface CharacterRecording {
 }
 export type CharacterVoiceCatalog = Record<
   string,
-  { characterId: string; name: string } & Record<
-    CharacterEffectEvent,
-    CharacterRecording
+  { characterId: string; name: string; merge: CharacterRecording } & Partial<
+    Record<Exclude<CharacterEffectEvent, "merge">, CharacterRecording>
   >
 >;
 export const CHARACTER_VOICES: CharacterVoiceCatalog = recordings;
 export const CHARACTER_EFFECTS: CharacterEffectMap = Object.fromEntries(
   Object.entries(CHARACTER_VOICES).map(([id, role]) => [
     id,
-    { drop: role.drop.src, merge: role.merge.src, win: role.win.src },
+    Object.fromEntries(
+      (["drop", "merge", "win"] as const).flatMap((event) => {
+        const clip = role[event];
+        return clip ? [[event, clip.src]] : [];
+      }),
+    ),
   ]),
 );
 const PRIORITY = { drop: 0, merge: 1, win: 2 };

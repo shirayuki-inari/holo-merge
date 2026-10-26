@@ -128,6 +128,26 @@ describe("recorded character playback", () => {
     assert.equal(contexts[0].sources.length, 0);
     player.destroy();
   });
+  test("default drop hook stays silent without fetching; custom drop recordings still work", async () => {
+    const player = new CharacterEffectsPlayer();
+    player.prepare(["todoroki-hajime", "tokino-sora"]);
+    player.unlock();
+    await settle();
+    assert.equal(requests.length, 3);
+    assert.ok(requests.every((source) => !source.endsWith("/drop.mp3")));
+    const before = [...requests];
+    assert.equal(await player.play("drop", "todoroki-hajime"), false);
+    assert.equal(await player.play("drop", "tokino-sora"), false);
+    assert.equal(await player.play("win", "todoroki-hajime"), false);
+    assert.deepEqual(requests, before);
+    assert.equal(contexts[0].sources.length, 0);
+    player.destroy();
+    const custom = new CharacterEffectsPlayer(fixture);
+    custom.unlock();
+    assert.equal(await custom.play("drop", "member"), true);
+    assert.equal(contexts[1].sources[0].buffer?.source, "/drop.mp3");
+    custom.destroy();
+  });
   test("drop cannot interrupt merge or win; win replaces the simultaneous final merge", async () => {
     const player = new CharacterEffectsPlayer(fixture);
     player.unlock();

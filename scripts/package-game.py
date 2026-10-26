@@ -30,15 +30,18 @@ class Entrypoints(HTMLParser):
             require_asset(url)
 Entrypoints().feed((DIST / 'index.html').read_text())
 voices = json.loads((ROOT / 'src/audio/character-voices.json').read_text())
+expected_voice_paths = set()
 for member in voices.values():
-    for event in ('drop', 'merge', 'win'): require_asset(member[event]['src'])
+    for event in ('drop', 'merge', 'win'):
+        if event in member:
+            expected_voice_paths.add(require_asset(member[event]['src']))
 talent_groups = json.loads((ROOT / 'src/talents.json').read_text())
 for group in talent_groups:
     for member in group['members']: require_asset(member['image'])
 bgm = sorted((DIST / 'audio/bgm').glob('*.mp3'))
 assert len(bgm) == 3, 'Package all three BGM files'
 voice_files = list((DIST / 'audio/characters').glob('*/*.mp3'))
-assert len(voice_files) == len(voices) * 3
+assert set(voice_files) == expected_voice_paths, 'Remove missing or unreferenced character audio files'
 allowed_top = {'index.html', 'favicon.svg', 'assets', 'audio', 'avatars'}
 assert all(path.relative_to(DIST).parts[0] in allowed_top for path in files), 'Unexpected file in dist'
 assert not any(path.suffix.lower() in {'.wav', '.csv', '.ts', '.tsx', '.map'} for path in files)

@@ -49,7 +49,7 @@ npm run preview  # 预览生产构建
 
 ## 角色语音与覆盖情况
 
-从用户提供的 `chr_00001-00039_语音_10字以内.csv`（1,443 条记录）及 `chr_06002-06005_语音_10字以内.csv`（188 条记录）按台词内容为 34 位成员各选择三条不同录音，共 **102 条**。投放使用出发、登场或行动类台词，合成使用肯定、成功或喜悦类台词，最高等级使用庆祝类台词；没有选择哼唱、品牌播报或与玩法无关的对话。
+从用户提供的 `chr_00001-00039_语音_10字以内.csv`（1,443 条记录）及 `chr_06002-06005_语音_10字以内.csv`（188 条记录）按台词内容保留当前规则会使用的 **39 条录音**：34 位成员各一条合成语音，另为 0 期生的 5 位成员各保留一条最高等级庆祝语音。合成使用肯定、成功或喜悦类台词，最高等级使用庆祝类台词。
 
 覆盖游戏中 **34 / 43 位独立成员（79.07%）**。白上フブキ兼属两个团体，下表按团体列出，统计独立成员时只计一次。
 
@@ -67,18 +67,18 @@ npm run preview  # 预览生产构建
 | FLOW GLOW         | 0 / 5             |
 | アソビ★まわり隊！ | 0 / 4             |
 
-FLOW GLOW 与アソビ★まわり隊！的 9 位成员不在提供的 CSV 中，保持静默，不替换成其他角色的录音。当前游戏投放的三个最新团体中，ReGLOSS 已有投放语音；合成到 ReGLOSS 及更早团体时使用对应成员的合成录音。`win` 事件仍遵循现有规则，只在首次合成 0 期生时触发；其他成员的最高等级录音已选好并配置，供后续规则扩展使用。
+FLOW GLOW 与アソビ★まわり隊！的 9 位成员不在提供的 CSV 中，保持静默，不替换成其他角色的录音。合成到 ReGLOSS 及更早团体时使用对应成员的合成录音。投放语音已关闭，全部投放录音及非 0 期生的最高等级录音均已移除，同时删除对应原始 WAV 与游戏 MP3。`drop` 类型、成功投放后的回调及播放器接口继续保留，未配置音频时静默返回且不发起请求；未来仍可注入投放音频映射。`win` 只在首次合成 0 期生时触发。
 
-以ときのそら为例：投放「わたしの出番だね！」，合成「いい感じだね♪」，最高等级「ばんざーい！」。完整选择清单及资源：
+以ときのそら为例：合成「いい感じだね♪」，最高等级「ばんざーい！」。完整选择清单及资源：
 
-- [102 条台词与文件对应表](assets/character-voices/selection.csv)
+- [39 条台词与文件对应表](assets/character-voices/selection.csv)
 - [覆盖统计及 9 位缺失成员](assets/character-voices/coverage.json)
 - [人工选择配置](assets/character-voices/choices.json) 与 [原始 CSV](assets/character-voices/source-index.csv)
-- 原始 WAV：`assets/character-voices/wav/<成员 ID>/<事件>.wav`，逐文件校验 SHA-256 后复制，合计 12,285,144 字节。
-- 游戏用 MP3：`public/audio/characters/<成员 ID>/<事件>.mp3`，保留完整录音，合计 1,681,950 字节。
+- 原始 WAV：`assets/character-voices/wav/<成员 ID>/<事件>.wav`，逐文件校验 SHA-256 后复制，合计 4,489,808 字节。
+- 游戏用 MP3：`public/audio/characters/<成员 ID>/<事件>.mp3`，保留完整录音，合计 622,659 字节。
 - 运行时清单：`src/audio/character-voices.json`，保存原文、来源文件、原始文件哈希和时长；播放器自动从清单建立成员映射。
 
-语音按成员 ID 和 `drop` / `merge` / `win` 分发。成功投放才触发 `drop`；`merge` 使用合成后成员；`win` 使用最高等级成员。播放优先级为最高等级 > 合成 > 投放，不同时叠放多段录音；暂停、后台、重开及卸载会停止播放，取消延迟解码的旧请求。没有增加新的界面文案或改变成员阵容、合成规则。
+语音按成员 ID 和 `drop` / `merge` / `win` 分发。成功投放仍调用 `drop` 接口，目前无音频配置；`merge` 使用合成后成员；`win` 仅为最高等级的 0 期生成员配置。播放优先级为最高等级 > 合成 > 投放，不同时叠放多段录音；暂停、后台、重开及卸载会停止播放，取消延迟解码的旧请求。没有增加新的界面文案或改变成员阵容、合成规则。
 
 修改 `choices.json` 后可用以下命令重新导入（需要 Python 和带 libmp3lame 的 FFmpeg；日常 npm 构建不需要）：
 
@@ -86,16 +86,16 @@ FLOW GLOW 与アソビ★まわり隊！的 9 位成员不在提供的 CSV 中�
 python scripts/import-character-voices.py
 ```
 
-导入器会读取 `.qa/voice-text/short-audio-job/wav-all/` 和 `.qa/voice-text/06002-06005-audio-job/wav-all/`，这些目录缺失时可使用项目中已保留的原始 WAV；更换录音来源时可指定 `--csv` 和 `--wav-dir`。导入时验证每个角色三个不同文件、CSV 原文不超过 10 个 Unicode 字符、原始录音不超过 5 秒及音频文件真实存在。
+导入器会读取 `.qa/voice-text/short-audio-job/wav-all/` 和 `.qa/voice-text/06002-06005-audio-job/wav-all/`，这些目录缺失时可使用项目中已保留的原始 WAV；更换录音来源时可指定 `--csv` 和 `--wav-dir`。导入时验证每位成员具有合成语音、只有最高等级成员具有 `win` 语音、同成员录音不重复、CSV 原文不超过 10 个 Unicode 字符、原始录音不超过 5 秒及音频文件真实存在；导入成功后同步移除已不在选择清单中的 WAV/MP3。打包和测试也会检查文件集合与清单完全一致，防止残留资源增大体积。
 
-ReGLOSS 的新增选择：
+ReGLOSS 保留的合成语音：
 
-| 成员           | 投放          | 合成            | 最高等级         |
-| -------------- | ------------- | --------------- | ---------------- |
-| 音乃瀬奏       | いっくよぉ～♪ | いいねいいね～♪ | どうだ～～！     |
-| 一条莉々華     | いっくぞ～♪   | ナイスぅ！      | イエーーイ！     |
-| 儒烏風亭らでん | いきます！    | いいですね～！  | やったやったー！ |
-| 轟はじめ       | いっくじょ～  | いいじゃん      | やったじぇっ！   |
+| 成员           | 合成            |
+| -------------- | --------------- |
+| 音乃瀬奏       | いいねいいね～♪ |
+| 一条莉々華     | ナイスぅ！      |
+| 儒烏風亭らでん | いいですね～！  |
+| 轟はじめ       | いいじゃん      |
 
 ## 静态部署与打包
 
@@ -117,7 +117,7 @@ npm run package
 
 当前资源路径以 `/` 开始，部署目标应是域名根目录。若要使用 `/game/` 等子目录，需要先同步修改 Vite base 和头像、音频路径。Google Fonts 是可选在线字体，有系统字体回退。部署包只由 `dist/` 生成；原始 WAV、CSV、开发依赖及 QA 目录保留在源码工作区，不进入生产包。
 
-部署包生成后，可将 ZIP 解压到任意目录，用静态服务器提供根路径，再运行 `BASE_URL=http://127.0.0.1:4173 npm run test:release`。此测试逐文件比对 HTTP 响应与部署清单、检查媒体 MIME/404，并验证生产页面实际投放 ReGLOSS 成员时的语音和响应式布局。
+部署包生成后，可将 ZIP 解压到任意目录，用静态服务器提供根路径，再运行 `BASE_URL=http://127.0.0.1:4173 npm run test:release`。此测试逐文件比对 HTTP 响应与部署清单、检查媒体 MIME/404，并验证生产页面投放 ReGLOSS 时静默、实际合成后的语音、已移除录音的 404 及响应式布局。
 
 包内文件的 ZIP CRC、逐文件 SHA-256 和归档可读权限都会在打包阶段验证。总体积以全部生产文件的逻辑字节数统计，不等于首次加载流量；准确数值以本次生成的 `deployment-manifest.json` 为准。
 
@@ -142,14 +142,14 @@ python scripts/fetch-talents.py
 ```sh
 BROWSER_PATH=/path/to/chromium npm run test:browser
 BROWSER_PATH=/path/to/chromium npm run test:audio-browser  # BGM 播放、自动播放限制、开关持久化及后台恢复
-BROWSER_PATH=/path/to/chromium npm run test:character-audio # 全部 102 条录音解码播放及实际合成/最高等级回调
+BROWSER_PATH=/path/to/chromium npm run test:character-audio # 全部 39 条录音解码播放及实际合成/最高等级回调
 ```
 
 可通过 `BASE_URL` 指定开发服务器地址。测试在真实浏览器中覆盖全部合成等级、碰撞连锁、最高级、满线宽限与恢复、结束、防连续误投、暂停、桌面键盘、移动触屏、弹窗以及 320–1440px 布局。截图保存到忽略目录 `.qa/`。浏览器测试直接导入开发模块，因此需使用开发服务器。
 
 ## GitHub CI
 
-推送、Pull Request 和手动触发都会运行 [GitHub Actions CI](https://github.com/shirayuki-inari/holo-merge/actions/workflows/ci.yml)：Node.js 22 / Python 3.12 环境下执行 `npm ci`、类型检查、单元测试和生产打包，再运行 Chromium 的玩法、BGM、102 条角色语音及解压部署包测试。测试浏览器由锁定版本的 Playwright 安装，未指定 `BROWSER_PATH` 时自动使用；Termux 继续使用系统 Chromium。
+推送、Pull Request 和手动触发都会运行 [GitHub Actions CI](https://github.com/shirayuki-inari/holo-merge/actions/workflows/ci.yml)：Node.js 22 / Python 3.12 环境下执行 `npm ci`、类型检查、单元测试和生产打包，再运行 Chromium 的玩法、BGM、39 条角色语音及解压部署包测试。测试浏览器由锁定版本的 Playwright 安装，未指定 `BROWSER_PATH` 时自动使用；Termux 继续使用系统 Chromium。
 
 成功后可从工作流的 Artifacts 下载 `holo-merge-web`，其中包含部署 ZIP、逐文件体积与 SHA-256 清单、部署说明和 Nginx 配置，保留 14 天。失败时保留浏览器截图和服务器日志 7 天。工作流不需要额外密钥，仅授予仓库内容读取权限；不自动发布网站。
 

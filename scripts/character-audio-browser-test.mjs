@@ -135,6 +135,11 @@ try {
     try {
       for (const [id, role] of Object.entries(CHARACTER_VOICES))
         for (const event of ["drop", "merge", "win"]) {
+          if (!role[event]) {
+            if (await player.play(event, id))
+              throw new Error(`Unconfigured voice started: ${id}/${event}`);
+            continue;
+          }
           if (!(await player.play(event, id)))
             throw new Error(`Voice did not start: ${id}/${event}`);
           const buffer = player.current.node.buffer;
@@ -153,10 +158,12 @@ try {
     }
     return report;
   });
-  assert.equal(results.length, 102);
+  assert.equal(results.length, 39);
+  assert.equal(results.filter((record) => record.event === "merge").length, 34);
+  assert.equal(results.filter((record) => record.event === "win").length, 5);
   assert.equal(new Set(results.map((record) => record.id)).size, 34);
   console.log(
-    "PASS all 102 shipped MP3 recordings decoded and started as real Web Audio sources, with non-silent full-duration waveforms",
+    "PASS all 39 shipped MP3 recordings decoded and started as real Web Audio sources, with non-silent full-duration waveforms",
   );
   await page.reload({ waitUntil: "networkidle" });
   for (const width of [320, 390, 768, 1280]) {
