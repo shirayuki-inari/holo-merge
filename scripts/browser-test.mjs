@@ -17,10 +17,13 @@ await mkdir(".qa", { recursive: true });
 const errors = [];
 try {
   const page = await browser.newPage({
+    locale: "zh-CN",
     viewport: { width: 1440, height: 1100 },
   });
   page.on("pageerror", (e) => errors.push(e.message));
-  await page.route("**/api/**", route => route.fulfill({ status: 404, contentType: "application/json", body: "{}" }));
+  await page.route("**/api/**", (route) =>
+    route.fulfill({ status: 404, contentType: "application/json", body: "{}" }),
+  );
   await page.goto(base, { waitUntil: "networkidle" });
   await page.locator("canvas").waitFor();
   await page.screenshot({ path: ".qa/desktop.png", fullPage: true });
@@ -44,13 +47,15 @@ try {
     .getByRole("button", { name: "继续游戏", exact: true })
     .last()
     .click();
-  await page.getByRole("button", { name: "关闭背景音乐", exact: true }).click();
+  await page.getByRole("button", { name: "设置", exact: true }).click();
+  await page.getByRole("switch", { name: "背景音乐", exact: true }).click();
   assert.equal(
     await page
-      .getByRole("button", { name: "开启背景音乐", exact: true })
-      .getAttribute("aria-pressed"),
+      .getByRole("switch", { name: "背景音乐", exact: true })
+      .getAttribute("aria-checked"),
     "false",
   );
+  await page.keyboard.press("Escape");
   await page.getByRole("button", { name: "查看玩法说明" }).click();
   assert.equal(await page.locator("dialog[open]").count(), 1);
   await page.keyboard.press("Escape");
@@ -70,8 +75,9 @@ try {
   // Fixture tests use the real production physics class and a fixed clock for deterministic collision coverage.
   const physics = await page.evaluate(async () => {
     const { HoloEngine } = await import("/src/game/engine.ts");
-    const { createLineup, RADII, mergePoints } =
-      await import("/src/game/model.ts");
+    const { createLineup, RADII, mergePoints } = await import(
+      "/src/game/model.ts"
+    );
     const matterURL = performance
       .getEntriesByType("resource")
       .find((e) => e.name.includes("/matter-js.js")).name;
@@ -270,13 +276,16 @@ try {
   });
   physics.forEach((m) => console.log("PASS " + m));
   const record = await browser.newPage({
+    locale: "zh-CN",
     viewport: { width: 1100, height: 900 },
   });
   record.on("pageerror", (e) => errors.push(e.message));
   await record.addInitScript(() => {
     Math.random = () => 0.1;
   });
-  await record.route("**/api/**", route => route.fulfill({ status: 404, contentType: "application/json", body: "{}" }));
+  await record.route("**/api/**", (route) =>
+    route.fulfill({ status: 404, contentType: "application/json", body: "{}" }),
+  );
   await record.goto(base, { waitUntil: "networkidle" });
   const recordCanvas = record.locator("canvas");
   const board = await recordCanvas.boundingBox();
@@ -318,13 +327,16 @@ try {
     "PASS no horizontal overflow at 320, 390, 580, 768, 1024, 1440 px",
   );
   const mobile = await browser.newPage({
+    locale: "zh-CN",
     viewport: { width: 390, height: 844 },
     isMobile: true,
     hasTouch: true,
     deviceScaleFactor: 2,
   });
   mobile.on("pageerror", (e) => errors.push(e.message));
-  await mobile.route("**/api/**", route => route.fulfill({ status: 404, contentType: "application/json", body: "{}" }));
+  await mobile.route("**/api/**", (route) =>
+    route.fulfill({ status: 404, contentType: "application/json", body: "{}" }),
+  );
   await mobile.goto(base, { waitUntil: "networkidle" });
   await mobile.screenshot({ path: ".qa/mobile.png", fullPage: true });
   const bounds = await mobile.locator("canvas").boundingBox();

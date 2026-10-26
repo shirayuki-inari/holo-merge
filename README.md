@@ -42,15 +42,21 @@ npm run preview  # 预览生产构建
 
 支持 **Node + SQLite** 和 **Cloudflare Workers + SQLite Durable Object** 两种部署，详见 [排行榜部署说明](deploy/leaderboard.md)。默认使用同域 `/api`；跨域部署前设置 `.env.example` 的 `VITE_LEADERBOARD_URL`。本地可运行 `npm run server:dev`（端口 8787），Vite 自动代理 API；也可用 `npm run workers:dev`。后端不可用时可继续离线玩，离线纪录不会补传。排行榜没有 15 分钟计分上限；对局凭证签发 6 小时后过期。
 
+## 设置与语言
+
+右上角齿轮打开设置，主页面保留排行榜、设置、玩法三个入口。可选择 BGM **01 / 02 / 03**，分别开关背景音乐与角色语音，并手动切换简体中文、日本語、English。所有设置保存在当前浏览器。首次根据浏览器语言选择，手动选择优先；语言变化即时生效，保留当前棋盘、成员阵容和得分。角色录音保留原音，不随界面语言更换。
+
+多语言包含游戏、Canvas 警戒线、说明、结算、排行榜、头像选择、错误提示、无障碍标签及页面标题和描述。英文使用成员数据已有的英文名；用户自定名称不翻译。[多语言维护说明](src/i18n/README.md) 记录新增语言、翻译参数、错误码与验证方法。
+
 ## 实现
 
 - Matter.js 圆形刚体，固定 **120 Hz** 物理步进、基于 `requestAnimationFrame` 绘制；帧延迟截断，避免后台恢复时模拟突跳。
 - Canvas 2D 渲染，圆形头像和静态背景预绘制，DPR 上限为 2；React 只订阅分数、投放、合成及状态变化，不参与逐帧动画。
 - 开启刚体休眠，碰撞合成在物理步进后统一处理；消耗刚体立即移除，避免一次碰撞被重复合成。
 - 暂停和后台时取消动画帧。销毁时清理物理世界、事件监听和 ResizeObserver。
-- BGM 使用从 `/sdcard/BGM` 复制的 3 首本地 MP3（位于 `public/audio/bgm/`）。每次打开页面随机选一首循环播放，重新开始本局不换曲；右上角 BGM 按钮控制开关，关闭偏好保存在本地。
+- BGM 使用从 `/sdcard/BGM` 复制的 3 首本地 MP3（位于 `public/audio/bgm/`）。未选择过曲目时随机选一首循环播放，重新开始本局不换曲；右上角设置面板提供独立开关与 01 / 02 / 03 编号选择，记住曲目与开关，不显示资源文件名。
 - 浏览器允许时尝试自动播放，被拦截后在首次鼠标、触屏或游戏键盘操作时重试。手动暂停游戏或切到后台时暂停音乐，恢复后继续同一首；查看说明等弹窗不切歌。
-- 已移除原有振荡器合成音效。角色录音由独立的 `src/audio/character-effects.ts` 管理，与 BGM 开关互不影响；仅预载本局成员的录音，首次操作解锁 Web Audio，录音解码后缓存复用。
+- 已移除原有振荡器合成音效。角色录音由独立的 `src/audio/character-effects.ts` 管理，与 BGM 开关互不影响；设置面板可关闭并立即停止角色语音，偏好保存在本地，静音重载时不加载录音；仅预载本局成员的录音，首次操作解锁 Web Audio，录音解码后缓存复用。
 - 保留 [hololive 官网](https://hololive.hololivepro.com/) 的 `#48c5f4` / `#5edeec` 青蓝色、三角标识与组件语言，以暖白、淡薄荷和少量粉色点缀构建紧凑的桌面游戏界面。
 - 页面以圆润棋盘为中心，分数和操作放在棋盘顶部；下一位成员采用对话纸条，11 位本局成员收进贴纸相册，详细合成顺序通过图鉴弹窗查看。
 - 手机将下一位成员移到棋盘上方，相册缩为单行；根据触控或鼠标显示对应操作提示。界面仅保留玩法、暂停、合成结果与结束原因等基本游戏提示。
@@ -153,13 +159,14 @@ python scripts/fetch-talents.py
 BROWSER_PATH=/path/to/chromium npm run test:browser
 BROWSER_PATH=/path/to/chromium npm run test:audio-browser  # BGM 播放、自动播放限制、开关持久化及后台恢复
 BROWSER_PATH=/path/to/chromium npm run test:character-audio # 全部 39 条录音解码播放及实际合成/最高等级回调
+BROWSER_PATH=/path/to/chromium npm run test:settings-browser # 编号选曲、语音静音、多语言及设置持久化
 ```
 
-可通过 `BASE_URL` 指定开发服务器地址。测试在真实浏览器中覆盖全部合成等级、碰撞连锁、最高级、满线宽限与恢复、结束、防连续误投、暂停、桌面键盘、移动触屏、弹窗以及 320–1440px 布局。截图保存到忽略目录 `.qa/`。浏览器测试直接导入开发模块，因此需使用开发服务器。
+可通过 `BASE_URL` 指定开发服务器地址。测试在真实浏览器中覆盖全部合成等级、碰撞连锁、最高级、满线宽限与恢复、结束、防连续误投、暂停、桌面键盘、移动触屏、弹窗以及 320–1440px 布局。截图保存到忽略目录 `.qa/`。玩法和旧音频测试直接导入开发模块，需使用开发服务器；设置 / 多语言测试同时支持开发和生产页面。
 
 ## GitHub CI
 
-推送、Pull Request 和手动触发都会运行 [GitHub Actions CI](https://github.com/shirayuki-inari/holo-merge/actions/workflows/ci.yml)：Node.js 22 / Python 3.12 环境下执行 `npm ci`、类型检查、单元测试和生产打包，并对 Node、Workers/workerd 分别运行 HTTP 校验，再运行 Chromium 的排行榜、玩法、BGM、39 条角色语音及解压部署包测试。测试浏览器由锁定版本的 Playwright 安装，未指定 `BROWSER_PATH` 时自动使用；Termux 继续使用系统 Chromium。
+推送、Pull Request 和手动触发都会运行 [GitHub Actions CI](https://github.com/shirayuki-inari/holo-merge/actions/workflows/ci.yml)：Node.js 22 / Python 3.12 环境下执行 `npm ci`、类型检查、单元测试和生产打包，并对 Node、Workers/workerd 分别运行 HTTP 校验，再运行 Chromium 的排行榜、玩法、BGM、39 条角色语音、三语言设置及解压部署包测试。测试浏览器由锁定版本的 Playwright 安装，未指定 `BROWSER_PATH` 时自动使用；Termux 继续使用系统 Chromium。
 
 成功后可从工作流的 Artifacts 下载 `holo-merge-web`，其中包含前端及两种后端部署 ZIP、逐文件体积与 SHA-256 清单、部署说明和 Nginx 配置，保留 14 天。失败时保留浏览器截图和服务器日志 7 天。工作流不需要额外密钥，仅授予仓库内容读取权限；不自动发布网站。
 

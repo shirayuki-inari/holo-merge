@@ -1,7 +1,13 @@
 import { useEffect, useState } from "react";
 import { ArrowUp, Check, RotateCcw, Trophy } from "lucide-react";
 import { groups } from "./game/model";
-import { connectPlayer, saveProfile, type Board } from "./leaderboard-client";
+import {
+  connectPlayer,
+  saveProfile,
+  leaderboardErrorText,
+  type Board,
+} from "./leaderboard-client";
+import { useI18n } from "./i18n";
 const talents = [
   ...new Map(groups.flatMap((g) => g.members).map((m) => [m.id, m])).values(),
 ];
@@ -19,8 +25,9 @@ export default function Leaderboard({
   submit: () => void;
   reloadKey: number;
 }) {
+  const { t, name: talentName, number } = useI18n();
   const [board, setBoard] = useState<Board | null>(null);
-  const [error, setError] = useState("");
+  const [error, setError] = useState<unknown>(null);
   const [busy, setBusy] = useState(false);
   const [name, setName] = useState("");
   const [avatar, setAvatar] = useState(talents[0].id);
@@ -30,7 +37,7 @@ export default function Leaderboard({
   useEffect(() => {
     let active = true;
     setBusy(true);
-    setError("");
+    setError(null);
     connectPlayer()
       .then((data) => {
         if (active) {
@@ -40,7 +47,7 @@ export default function Leaderboard({
         }
       })
       .catch((e) => {
-        if (active) setError(e.message);
+        if (active) setError(e);
       })
       .finally(() => {
         if (active) setBusy(false);
@@ -52,34 +59,37 @@ export default function Leaderboard({
   async function save(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
-    setError("");
+    setError(null);
     setSaved(false);
     try {
       setBoard(await saveProfile(name, avatar));
       setEditing(false);
       setSaved(true);
     } catch (e) {
-      setError((e as Error).message);
+      setError(e);
     } finally {
       setBusy(false);
     }
   }
   return (
     <div className="leaderboard">
-      <p>按每位玩家的最高得分排序，显示前 50 名。</p>
+      <p>{t("board.description")}</p>
       {board?.me && (
         <div className="player-summary">
           <img
             className="portrait"
             src={byId.get(board.me.avatar)?.image}
-            alt="我的头像"
+            alt={t("board.avatar")}
           />
           <div>
             <strong>{board.me.name}</strong>
             <small>
               {board.me.rank
-                ? `第 ${board.me.rank} 名 · ${board.me.score.toLocaleString()} 分`
-                : "暂无上榜成绩"}
+                ? t("board.rank", {
+                    rank: number(board.me.rank),
+                    score: number(board.me.score),
+                  })
+                : t("board.noScore")}
             </small>
           </div>
           <button
@@ -90,13 +100,13 @@ export default function Leaderboard({
             }}
             aria-expanded={editing}
           >
-            修改资料
+            {t("board.edit")}
           </button>
         </div>
       )}
       {editing && (
         <form className="profile-form" onSubmit={save}>
-          <label htmlFor="player-name">玩家名称</label>
+          <label htmlFor="player-name">{t("board.name")}</label>
           <input
             id="player-name"
             autoComplete="nickname"
@@ -104,17 +114,19 @@ export default function Leaderboard({
             onChange={(e) => setName(e.target.value)}
             maxLength={32}
             required
-            placeholder="1–16 个字"
+            placeholder={t("board.nameHint")}
           />
           <fieldset>
-            <legend>选择角色头像</legend>
+            <legend>{t("board.choose")}</legend>
             <div className="avatar-picker">
               {talents.map((talent) => (
                 <button
                   type="button"
                   key={talent.id}
                   className={avatar === talent.id ? "selected" : ""}
-                  aria-label={`选择头像：${talent.name}`}
+                  aria-label={t("board.chooseAvatar", {
+                    name: talentName(talent),
+                  })}
                   aria-pressed={avatar === talent.id}
                   onClick={() => setAvatar(talent.id)}
                 >
@@ -130,13 +142,13 @@ export default function Leaderboard({
             </div>
           </fieldset>
           <button className="primary-button full" disabled={busy}>
-            {busy ? "保存中…" : "保存资料"}
+            {busy ? t("board.saving") : t("board.save")}
           </button>
         </form>
       )}
       {saved && (
         <p role="status" className="rank-feedback">
-          资料已保存。
+          {t("board.saved")}
         </p>
       )}
       {result && (
@@ -151,33 +163,31 @@ export default function Leaderboard({
           onClick={submit}
         >
           <ArrowUp size={15} />
-          {submitting ? "正在校验成绩…" : "结算本局并提交成绩"}
+          {submitting ? t("board.verifying") : t("board.submit")}
         </button>
       )}
-      {canSubmit && (
-        <p className="rank-help">提交后本局结束，以服务器校验的得分为准。</p>
-      )}
-      {error && (
+      {canSubmit && <p className="rank-help">{t("board.submitHelp")}</p>}
+      {error !== null && (
         <p role="alert" className="rank-error">
-          {error}
+          {leaderboardErrorText(error, t)}
         </p>
       )}
       <div className="rank-heading">
         <span>
-          <Trophy size={14} /> 最高得分
+          <Trophy size={14} /> {t("board.best")}
         </span>
         <button
           className="icon-button"
-          aria-label="刷新排行榜"
+          aria-label={t("board.refresh")}
           disabled={busy || submitting}
           onClick={() => setReload((v) => v + 1)}
         >
           <RotateCcw size={14} />
         </button>
       </div>
-      {busy && !board && <p role="status">正在加载排行榜…</p>}
+      {busy && !board && <p role="status">{t("board.loading")}</p>}
       {board && !board.entries.length && (
-        <p className="rank-empty">暂无成绩，完成一局后提交即可上榜。</p>
+        <p className="rank-empty">{t("board.empty")}</p>
       )}
       {board && (
         <ol className="rank-list">
@@ -194,16 +204,14 @@ export default function Leaderboard({
               />
               <span className="rank-name">
                 {entry.name}
-                {entry.id === board.me?.id && <small>我</small>}
+                {entry.id === board.me?.id && <small>{t("board.me")}</small>}
               </span>
-              <strong>{entry.score.toLocaleString()}</strong>
+              <strong>{number(entry.score)}</strong>
             </li>
           ))}
         </ol>
       )}
-      <p className="rank-help">
-        玩家身份保存在此浏览器，清除网站数据后无法找回原纪录。
-      </p>
+      <p className="rank-help">{t("board.identity")}</p>
     </div>
   );
 }

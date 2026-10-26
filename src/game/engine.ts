@@ -19,6 +19,7 @@ type Ring = {
 };
 interface Options extends SimulationOptions {
   lineup: Talent[];
+  labels?: { limit: string; danger: string };
 }
 export class HoloEngine extends Simulation {
   private ctx: CanvasRenderingContext2D;
@@ -47,6 +48,10 @@ export class HoloEngine extends Simulation {
     document.addEventListener("visibilitychange", this.visibility);
     this.emit();
     this.frame = requestAnimationFrame(this.tick);
+  }
+  setLabels(labels: NonNullable<Options["labels"]>) {
+    this.visualOptions.labels = labels;
+    this.draw();
   }
   private visibility = () => {
     this.hidden = document.hidden;
@@ -204,7 +209,9 @@ export class HoloEngine extends Simulation {
     c.font = "10px sans-serif";
     c.textAlign = "right";
     c.fillText(
-      this.state.danger ? "已超过警戒线，请及时合成" : "警戒线",
+      this.state.danger
+        ? (this.visualOptions.labels?.danger ?? "!")
+        : (this.visualOptions.labels?.limit ?? "—"),
       WIDTH - 17,
       DANGER_Y - 9,
     );

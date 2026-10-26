@@ -16,7 +16,7 @@ interface BgmOptions {
   suspended: boolean;
 }
 
-/** One looping track per page. Music preferences are independent of character effects. */
+/** One looping track at a time. Music preferences are independent of character effects. */
 export class BgmPlayer {
   private enabled: boolean;
   private suspended: boolean;
@@ -34,6 +34,13 @@ export class BgmPlayer {
     document.addEventListener("pointerdown", this.onInteraction);
     document.addEventListener("keydown", this.onInteraction);
     document.addEventListener("visibilitychange", this.sync);
+    this.sync();
+  }
+  setSource(source: string) {
+    if (this.disposed || this.audio.getAttribute("src") === source) return;
+    this.audio.pause();
+    this.audio.src = source;
+    this.audio.load();
     this.sync();
   }
   setEnabled(enabled: boolean) {

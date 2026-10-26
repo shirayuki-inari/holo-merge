@@ -21,8 +21,7 @@ import {
   RotateCcw,
   Sparkles,
   Trophy,
-  Music2,
-  VolumeX,
+  Settings,
   X,
 } from "lucide-react";
 import { HoloEngine, type GameState } from "./game/engine";
@@ -32,7 +31,18 @@ import { CharacterEffectsPlayer } from "./audio/character-effects";
 import Leaderboard from "./Leaderboard";
 import { useRankedRound } from "./useRankedRound";
 import { seededRandom, MAX_DROPS } from "./game/replay";
-import { submitScore, LeaderboardError } from "./leaderboard-client";
+import {
+  submitScore,
+  LeaderboardError,
+  leaderboardErrorText,
+} from "./leaderboard-client";
+import { useI18n } from "./i18n";
+import SettingsPanel from "./Settings";
+import { useVoicePreference } from "./preferences";
+type ScoreFeedback =
+  | { kind: "capacity" | "expired" }
+  | { kind: "accepted"; score: number; improved: boolean }
+  | { kind: "error"; error: unknown };
 const STORAGE_KEY = "holo-merge-best-v1";
 function storedBest() {
   try {
@@ -50,11 +60,12 @@ function Portrait({
   className?: string;
   style?: React.CSSProperties;
 }) {
+  const { name } = useI18n();
   return (
     <img
       className={`portrait ${className}`}
       src={talent.image}
-      alt={talent.name}
+      alt={name(talent)}
       style={style}
       draggable={false}
     />
@@ -69,6 +80,7 @@ function Modal({
   close: () => void;
   title: string;
 }) {
+  const { t } = useI18n();
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
   useEffect(() => {
@@ -101,7 +113,7 @@ function Modal({
         <button
           className="icon-button modal-close"
           onClick={close}
-          aria-label="关闭"
+          aria-label={t("common.close")}
         >
           <X size={20} />
         </button>
@@ -125,6 +137,7 @@ const initial: GameState = {
   combo: 0,
 };
 export default function App() {
+  const { t, name, group, number } = useI18n();
   const canvas = useRef<HTMLCanvasElement>(null),
     engine = useRef<HoloEngine | null>(null);
   const [round, setRound] = useState(0);
@@ -140,7 +153,18 @@ export default function App() {
   );
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const [rankResult, setRankResult] = useState("");
+  const [rankResult, setRankResult] = useState<ScoreFeedback | null>(null);
+  const rankText = !rankResult
+    ? ""
+    : rankResult.kind === "error"
+      ? leaderboardErrorText(rankResult.error, t)
+      : rankResult.kind === "accepted"
+        ? t(rankResult.improved ? "score.improved" : "score.kept", {
+            score: number(rankResult.score),
+          })
+        : t(
+            rankResult.kind === "capacity" ? "score.capacity" : "score.expired",
+          );
   const [rankReload, setRankReload] = useState(0);
   const [game, setGame] = useState<GameState>(initial);
   const [mergeNotice, setMergeNotice] = useState<{
@@ -152,13 +176,25 @@ export default function App() {
   const [paused, setPaused] = useState(false);
   const bgm = useBackgroundMusic(paused);
   const characterEffects = useRef<CharacterEffectsPlayer | null>(null);
+  const voices = useVoicePreference((enabled) =>
+    characterEffects.current?.setEnabled(enabled),
+  );
+  const voicesInitial = useRef(voices.enabled);
   const [modal, setModal] = useState<
-    "help" | "restart" | "over" | "win" | "lineup" | "leaderboard" | null
+    | "help"
+    | "restart"
+    | "over"
+    | "win"
+    | "lineup"
+    | "leaderboard"
+    | "settings"
+    | null
   >(null);
   const dragging = useRef(false),
     pointerStart = useRef({ x: 0, y: 0 });
   useEffect(() => {
     const player = new CharacterEffectsPlayer();
+    player.setEnabled(voicesInitial.current);
     characterEffects.current = player;
     return () => {
       player.destroy();
@@ -204,6 +240,13 @@ export default function App() {
       engine.current = null;
     };
   }, [lineup, ranked.ready, ranked.session]);
+  // UI language updates only the renderer, preserving the current simulation and replay.
+  useEffect(() => {
+    engine.current?.setLabels({
+      limit: t("game.limit"),
+      danger: t("game.danger"),
+    });
+  }, [t, lineup, ranked.ready]);
   useEffect(() => {
     engine.current?.setPaused(paused || modal !== null);
   }, [paused, modal, lineup, ranked.ready]);
@@ -218,7 +261,7 @@ export default function App() {
     setMergeNotice(null);
     setRound((v) => v + 1);
     setSubmitted(false);
-    setRankResult("");
+    setRankResult(null);
     setGame(initial);
     setPaused(false);
     setModal(null);
@@ -229,30 +272,32 @@ export default function App() {
     if (!instance || !session || submitting || submitted) return;
     const replay = instance.replay();
     if (replay.drops.length > MAX_DROPS) {
-      setRankResult("本局投放记录超过提交容量，请重新开始后参榜。");
+      setRankResult({ kind: "capacity" });
       return;
     }
     if (Date.now() > session.expires) {
-      setRankResult("本局排行榜凭证已过期，请重新开始后参榜。");
+      setRankResult({ kind: "expired" });
       return;
     }
     if (!instance.state.over) instance.finish();
     setModal("leaderboard");
     setSubmitting(true);
-    setRankResult("");
+    setRankResult(null);
     try {
       const result = await submitScore(session.id, replay);
       setSubmitted(true);
       setRankReload((v) => v + 1);
-      setRankResult(
-        `已提交 ${result.acceptedScore.toLocaleString()} 分${result.improved ? "，最高纪录已更新。" : "。最高纪录保留。"}`,
-      );
+      setRankResult({
+        kind: "accepted",
+        score: result.acceptedScore,
+        improved: result.improved,
+      });
     } catch (error) {
       if (error instanceof LeaderboardError && error.status === 409) {
         setSubmitted(true);
         setRankReload((v) => v + 1);
       }
-      setRankResult((error as Error).message);
+      setRankResult({ kind: "error", error });
     } finally {
       setSubmitting(false);
     }
@@ -291,47 +336,37 @@ export default function App() {
               holo<span>merge!</span>
               <Heart className="brand-heart" size={15} />
             </h1>
-            <p>hololive 成员合成游戏</p>
+            <p>{t("app.subtitle")}</p>
           </div>
         </div>
         <div className="header-actions">
           <button
             className="icon-button"
             onClick={() => setModal("leaderboard")}
-            aria-label="排行榜"
-            title="排行榜"
+            aria-label={t("board.title")}
+            title={t("board.title")}
           >
             <Trophy size={17} />
           </button>
           <button
-            className="icon-button bgm-button"
-            data-bgm-toggle
-            data-playing={bgm.playing}
-            onClick={bgm.toggle}
-            aria-label={bgm.enabled ? "关闭背景音乐" : "开启背景音乐"}
-            aria-pressed={bgm.enabled}
-            title={
-              bgm.enabled
-                ? bgm.playing
-                  ? "关闭背景音乐"
-                  : "背景音乐：待播放"
-                : "开启背景音乐"
-            }
+            className="icon-button"
+            onClick={() => setModal("settings")}
+            aria-label={t("settings.title")}
+            title={t("settings.title")}
           >
-            {bgm.enabled ? <Music2 size={17} /> : <VolumeX size={17} />}
-            <span>BGM</span>
+            <Settings size={18} />
           </button>
           <button
             className="icon-button"
             onClick={() => setModal("help")}
-            aria-label="查看玩法说明"
-            title="玩法说明"
+            aria-label={t("help.open")}
+            title={t("help.title")}
           >
             <CircleHelp size={18} />
           </button>
         </div>
       </header>
-      <main className="game-desk" aria-label="合成游戏">
+      <main className="game-desk" aria-label={t("game.label")}>
         <aside className="desk-note" aria-hidden="true">
           <svg className="note-doodle" viewBox="0 0 100 75" fill="none">
             <path
@@ -351,38 +386,38 @@ export default function App() {
         </aside>
         <section
           className={`game-shell ${game.danger ? "in-danger" : ""}`}
-          aria-label="游戏棋盘"
+          aria-label={t("game.board")}
         >
           <div className="game-toolbar">
             <div className="score-card">
               <span>
                 <Sparkles size={12} />
-                本局得分
+                {t("game.score")}
               </span>
-              <strong aria-live="polite">{game.score.toLocaleString()}</strong>
+              <strong aria-live="polite">{number(game.score)}</strong>
             </div>
             <div className="best-card">
               <span>
                 <Trophy size={12} />
-                最高纪录
+                {t("game.best")}
               </span>
-              <strong>{best.toLocaleString()}</strong>
+              <strong>{number(best)}</strong>
             </div>
             <div className="board-actions">
               <button
                 className="icon-button"
                 onClick={() => setPaused((v) => !v)}
                 disabled={game.over}
-                aria-label={paused ? "继续游戏" : "暂停游戏"}
-                title={paused ? "继续游戏" : "暂停游戏"}
+                aria-label={paused ? t("game.resume") : t("game.pause")}
+                title={paused ? t("game.resume") : t("game.pause")}
               >
                 {paused ? <Play size={17} /> : <Pause size={17} />}
               </button>
               <button
                 className="icon-button"
                 onClick={requestRestart}
-                aria-label="重新开始"
-                title="重新开始"
+                aria-label={t("game.restart")}
+                title={t("game.restart")}
               >
                 <RotateCcw size={17} />
               </button>
@@ -392,7 +427,7 @@ export default function App() {
             <canvas
               ref={canvas}
               tabIndex={0}
-              aria-label="合成游戏区域。左右方向键移动，空格或回车投放，P 键暂停。"
+              aria-label={t("game.canvas")}
               onPointerDown={(e) => {
                 if (e.pointerType === "mouse" && e.button !== 0) return;
                 dragging.current = true;
@@ -436,19 +471,19 @@ export default function App() {
 
             {!ranked.ready && (
               <div className="board-overlay">
-                <p role="status">正在准备本局…</p>
+                <p role="status">{t("game.preparing")}</p>
               </div>
             )}
             {ranked.ready && game.drops === 0 && !paused && !modal && (
               <div className="empty-welcome" aria-hidden="true">
-                <span className="welcome-tag">合成规则</span>
+                <span className="welcome-tag">{t("game.rules")}</span>
                 <div className="welcome-faces">
                   <Portrait talent={lineup[0]} />
                   <Plus size={19} aria-hidden="true" />
                   <Portrait talent={lineup[0]} />
                 </div>
-                <h2>相同成员合成下一级</h2>
-                <p>点击或松手投放成员。</p>
+                <h2>{t("game.same")}</h2>
+                <p>{t("game.dropHint")}</p>
                 <span className="welcome-pointer">
                   <MousePointer2 size={17} />
                 </span>
@@ -461,7 +496,7 @@ export default function App() {
                 role="status"
               >
                 <Heart size={13} fill="currentColor" />
-                已合成：{lineup[mergeNotice.level].name}
+                {t("game.merged", { name: name(lineup[mergeNotice.level]) })}
               </div>
             )}
             {paused && !modal && (
@@ -472,31 +507,31 @@ export default function App() {
                     <Pause size={18} />
                   </span>
                 </span>
-                <h2>游戏已暂停</h2>
+                <h2>{t("game.paused")}</h2>
                 <button
                   className="primary-button"
                   onClick={() => setPaused(false)}
-                  aria-label="继续游戏"
+                  aria-label={t("game.resume")}
                 >
                   <Play size={15} />
-                  继续游戏
+                  {t("game.resume")}
                 </button>
               </div>
             )}
             {game.over && !modal && (
               <div className="board-overlay">
                 <Heart className="end-heart" size={32} />
-                <h2>游戏结束</h2>
+                <h2>{t("game.over")}</h2>
                 {ranked.session && !submitted && game.score > 0 && (
                   <button
                     className="secondary-button"
                     onClick={() => setModal("leaderboard")}
                   >
-                    提交成绩
+                    {t("game.submit")}
                   </button>
                 )}
                 <button className="primary-button" onClick={restart}>
-                  再玩一局
+                  {t("game.again")}
                   <ArrowRight size={15} />
                 </button>
               </div>
@@ -505,27 +540,25 @@ export default function App() {
           <div className={`game-bottom ${game.danger ? "warning" : ""}`}>
             <span>
               {game.danger ? <CircleHelp size={13} /> : <Heart size={12} />}
-              {game.danger
-                ? "已超过警戒线，请及时合成"
-                : "相同成员碰撞后合成下一级。"}
+              {game.danger ? t("game.danger") : t("game.mergeRule")}
             </span>
             <span
               className={`status-dot ${paused || modal || game.over ? "is-paused" : ""}`}
               title={
                 game.over
-                  ? "本局结束"
+                  ? t("game.ended")
                   : paused || modal
-                    ? "已暂停"
-                    : "游戏进行中"
+                    ? t("game.pauseStatus")
+                    : t("game.running")
               }
             />
           </div>
         </section>
-        <aside className="play-companions" aria-label="成员与合成图鉴">
+        <aside className="play-companions" aria-label={t("lineup.label")}>
           <section className="next-card">
             <div className="note-heading">
               <span className="tiny-play" />
-              下一位
+              {t("lineup.next")}
               <Heart size={12} />
             </div>
             <div className="next-orbit">
@@ -536,27 +569,29 @@ export default function App() {
               <span className="next-spark">✧</span>
             </div>
             <div className="next-name">
-              <h2>{lineup[game.next].name}</h2>
-              <span className="group-pill">{groups[game.next].name}</span>
+              <h2>{name(lineup[game.next])}</h2>
+              <span className="group-pill">{group(groups[game.next])}</span>
             </div>
             <Heart className="next-heart" size={14} aria-hidden="true" />
           </section>
-          <section className="goal-note" aria-label="下一个合成目标">
+          <section className="goal-note" aria-label={t("lineup.goal")}>
             <span className="goal-flower" aria-hidden="true">
               ✿
             </span>
             <div>
-              <p>{game.highest === 10 ? "已达最高等级" : "下一合成等级"}</p>
+              <p>
+                {game.highest === 10 ? t("lineup.max") : t("lineup.nextLevel")}
+              </p>
               <h3>
                 {game.highest === 10
-                  ? "0 期生"
-                  : groups[game.highest + 1].name.replace("秘密結社 ", "")}
+                  ? group(groups[10])
+                  : group(groups[game.highest + 1])}
               </h3>
             </div>
           </section>
-          <section className="companion-album" aria-label="本局成员图鉴">
+          <section className="companion-album" aria-label={t("lineup.album")}>
             <div className="album-heading">
-              <h2>本局成员</h2>
+              <h2>{t("lineup.current")}</h2>
               <span>
                 {game.highest + 1}
                 <small> / 11</small>
@@ -568,8 +603,11 @@ export default function App() {
                   className={`evolution-item ${i <= game.highest ? "discovered" : ""} ${i === game.highest ? "latest" : ""}`}
                   key={groups[i].id}
                   onClick={() => setModal("lineup")}
-                  title={`${groups[i].name} · ${talent.name}`}
-                  aria-label={`查看本局成员：${talent.name}，${groups[i].name}`}
+                  title={`${group(groups[i])} · ${name(talent)}`}
+                  aria-label={t("lineup.view", {
+                    name: name(talent),
+                    group: group(groups[i]),
+                  })}
                   style={{ "--member-color": COLORS[i] } as React.CSSProperties}
                 >
                   <Portrait talent={talent} />
@@ -578,43 +616,45 @@ export default function App() {
               ))}
             </div>
             <button className="text-button" onClick={() => setModal("lineup")}>
-              合成图鉴
+              {t("lineup.guide")}
               <ArrowRight size={13} />
             </button>
-            <p className="album-caption">每局成员随机选定，局内固定。</p>
+            <p className="album-caption">{t("lineup.fixed")}</p>
           </section>
         </aside>
         <div className="play-hint">
           <span className="mouse-hint">
             <MousePointer2 size={13} />
-            移动瞄准，点击落下
+            {t("controls.mouse")}
           </span>
           <span className="touch-hint">
             <ArrowDown size={13} />
-            拖动瞄准，松手落下
+            {t("controls.touch")}
           </span>
           <span className="keyboard-hint">
             <kbd>←</kbd>
-            <kbd>→</kbd> 移动 <i>·</i>
-            <kbd>空格</kbd>落下
+            <kbd>→</kbd> {t("controls.move")} <i>·</i>
+            <kbd>{t("controls.space")}</kbd>
+            {t("controls.drop")}
           </span>
         </div>
       </main>
       <div className="rank-round-status" role="status">
-        {submitted ? "本局成绩已提交" : ranked.message}
+        {submitted ? t("rank.submitted") : t(ranked.message)}
       </div>
       <footer className="room-footer">
         <p>
-          非官方粉丝游戏 <Heart size={10} />
+          {t("footer.fan")} <Heart size={10} />
         </p>
         <span>
-          角色与头像 © COVER Corp.<i>·</i>
+          {t("footer.copyright")}
+          <i>·</i>
           <a
             href="https://hololive.hololivepro.com/talents/"
             target="_blank"
             rel="noreferrer"
           >
-            官方成员介绍
+            {t("footer.official")}
             <ArrowUpRight size={10} />
           </a>
         </span>
@@ -624,23 +664,28 @@ export default function App() {
           close={closeModal}
           title={
             modal === "help"
-              ? "玩法说明"
+              ? t("help.title")
               : modal === "restart"
-                ? "重新开始？"
+                ? t("restart.title")
                 : modal === "over"
-                  ? "游戏结束"
+                  ? t("game.over")
                   : modal === "win"
-                    ? "已合成最高等级"
+                    ? t("result.win")
                     : modal === "leaderboard"
-                      ? "排行榜"
-                      : "本局成员"
+                      ? t("board.title")
+                      : modal === "settings"
+                        ? t("settings.title")
+                        : t("lineup.current")
           }
         >
+          {modal === "settings" && (
+            <SettingsPanel bgm={bgm} voices={voices} close={closeModal} />
+          )}
           {modal === "leaderboard" && (
             <Leaderboard
               canSubmit={!!ranked.session && !submitted && game.drops > 0}
               submitting={submitting}
-              result={rankResult}
+              result={rankText}
               submit={submitCurrentScore}
               reloadKey={rankReload}
             />
@@ -654,45 +699,34 @@ export default function App() {
                 <ArrowRight size={22} />
                 <Portrait talent={lineup[1]} />
               </div>
-              <p>
-                移动鼠标或手指选择位置，点击或松手投放。两个相同成员碰到一起，就会合成下一个更早出道团体的成员。
-              </p>
-              <p>
-                每局为每个团体随机选择一位成员，同局保持一致。新投放的是前三个团体的成员；最高可合成到{" "}
-                <b>0 期生</b>，达成后还能继续挑战高分。
-              </p>
+              <p>{t("help.aim")}</p>
+              <p>{t("help.lineup")}</p>
               <div className="help-controls">
                 <span>
-                  <MousePointer2 size={18} /> 鼠标移动 / 点击
+                  <MousePointer2 size={18} /> {t("help.mouse")}
                 </span>
                 <span>
-                  <ArrowDown size={18} /> 触屏拖动 / 松手
+                  <ArrowDown size={18} /> {t("help.touch")}
                 </span>
                 <span>
-                  <Keyboard size={18} /> ← → 移动 · 空格投放 · P 暂停
+                  <Keyboard size={18} /> {t("help.keyboard")}
                 </span>
               </div>
-              <p className="help-warning">
-                成员在虚线上方持续堆积约 2
-                秒，本局结束。暂停或切到后台时，游戏会停止计时。
-              </p>
+              <p className="help-warning">{t("help.warning")}</p>
               <button className="primary-button full" onClick={closeModal}>
-                返回游戏 <Play size={15} />
+                {t("common.back")} <Play size={15} />
               </button>
             </>
           )}
           {modal === "restart" && (
             <>
-              <p>
-                本局得分为 <b>{game.score}</b>
-                。重新开始会清空棋盘，随机选择新的成员阵容，最高纪录会保留。
-              </p>
+              <p>{t("restart.body", { score: number(game.score) })}</p>
               <div className="modal-actions">
                 <button className="secondary-button" onClick={closeModal}>
-                  继续本局
+                  {t("restart.continue")}
                 </button>
                 <button className="primary-button" onClick={restart}>
-                  重新开始 <RotateCcw size={15} />
+                  {t("game.restart")} <RotateCcw size={15} />
                 </button>
               </div>
             </>
@@ -704,19 +738,19 @@ export default function App() {
               </div>
               <p className="result-caption">
                 {modal === "win"
-                  ? `已合成 0 期生：${lineup[10].name}`
-                  : "成员持续超过警戒线，本局结束。"}
+                  ? t("result.member", { name: name(lineup[10]) })
+                  : t("result.over")}
               </p>
               <div className="result-score">
-                <span>本局得分</span>
-                <strong>{game.score.toLocaleString()}</strong>
+                <span>{t("game.score")}</span>
+                <strong>{number(game.score)}</strong>
               </div>
               <div className="result-details">
                 <span>
-                  最高纪录 <b>{best.toLocaleString()}</b>
+                  {t("game.best")} <b>{number(best)}</b>
                 </span>
                 <span>
-                  已到达 <b>{groups[game.highest].name}</b>
+                  {t("result.reached")} <b>{group(groups[game.highest])}</b>
                 </span>
               </div>
               {modal === "over" &&
@@ -727,23 +761,21 @@ export default function App() {
                     className="secondary-button full"
                     onClick={() => setModal("leaderboard")}
                   >
-                    提交成绩
+                    {t("game.submit")}
                   </button>
                 )}
               <button
                 className="primary-button full"
                 onClick={modal === "win" ? closeModal : restart}
               >
-                {modal === "win" ? "继续游戏" : "再来一局"}{" "}
+                {modal === "win" ? t("game.resume") : t("result.again")}{" "}
                 <ArrowRight size={16} />
               </button>
             </>
           )}
           {modal === "lineup" && (
             <>
-              <p>
-                以下按合成顺序排列。两个相同成员合成后，将升级为列表中的下一位。
-              </p>
+              <p>{t("lineup.description")}</p>
               <div className="lineup-list">
                 {lineup.map((talent, i) => (
                   <a
@@ -757,8 +789,8 @@ export default function App() {
                     </span>
                     <Portrait talent={talent} />
                     <div>
-                      <strong>{talent.name}</strong>
-                      <small>{groups[i].name}</small>
+                      <strong>{name(talent)}</strong>
+                      <small>{group(groups[i])}</small>
                     </div>
                     <ArrowUpRight size={15} />
                   </a>

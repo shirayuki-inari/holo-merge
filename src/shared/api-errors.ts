@@ -1,0 +1,28 @@
+// Stable codes shared by Node and Workers. Keep messages for older clients.
+export const API_ERRORS = {
+  profileRequired: "请输入名称并选择头像。",
+  invalidName: "名称须为 1–16 个字，不能包含控制符或尖括号。",
+  invalidAvatar: "请选择已有角色头像。",
+  invalidReplay: "对局记录不符合当前规则或超过提交容量。",
+  invalidTiming: "对局计时异常。",
+  invalidDrop: "投放记录无效。",
+  invalidDropRate: "投放位置或频率异常。",
+  afterGameOver: "游戏结束后的记录无效。",
+  replayFailed: "投放记录无法回放。",
+  invalidBoard: "棋盘数量异常。",
+  jsonRequired: "请使用 JSON 请求。",
+  bodyTooLarge: "请求过大。",
+  bodyRequired: "缺少请求内容。",
+  invalidBody: "请求内容无效。",
+  rateLimited: "操作过于频繁，请稍后再试。",
+  originDenied: "不允许来自此站点的请求。",
+  identityExpired: "玩家凭证已失效，请重新创建玩家。",
+  runRequired: "缺少对局凭证。",
+  runExpired: "对局不存在或已过期。",
+  alreadySubmitted: "本局成绩已提交。",
+  verificationBusy: "已有成绩正在校验，请稍后再试。",
+  invalidToken: "玩家凭证无效。",
+  identityExists: "玩家凭证已存在。请使用原有凭证。",
+  notFound: "接口不存在。",
+} as const;
+export type ApiErrorCode = keyof typeof API_ERRORS;

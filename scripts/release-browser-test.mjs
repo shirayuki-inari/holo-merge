@@ -26,6 +26,7 @@ const browser = await chromium.launch({
 const base = process.env.BASE_URL || "http://127.0.0.1:4173";
 try {
   const page = await browser.newPage({
+    locale: "zh-CN",
     viewport: { width: 1280, height: 900 },
   });
   const errors = [];
@@ -90,7 +91,9 @@ try {
       ),
     true,
   );
-  await page.getByRole("button", { name: "关闭背景音乐" }).click();
+  await page.getByRole("button", { name: "设置", exact: true }).click();
+  await page.getByRole("switch", { name: "背景音乐", exact: true }).click();
+  await page.keyboard.press("Escape");
   await page.locator("canvas").click();
   await page.waitForTimeout(500);
   assert.deepEqual(await page.evaluate(() => window.__voiceStarts), []);

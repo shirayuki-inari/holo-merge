@@ -1,3 +1,11 @@
+import { API_ERRORS, type ApiErrorCode } from "./shared/api-errors";
+import {
+  createTranslator,
+  detectLocale,
+  isLocale,
+  LANGUAGE_KEY,
+} from "./i18n/core";
+import type { Translate } from "./i18n/types";
 import { groups } from "./game/model";
 import type { Replay } from "./game/replay";
 export interface Entry {
@@ -43,6 +51,7 @@ export class LeaderboardError extends Error {
   constructor(
     message: string,
     public status = 0,
+    public code: ApiErrorCode | "unavailable" | "network" = "unavailable",
   ) {
     super(message);
   }
@@ -69,12 +78,17 @@ async function request<T>(
       throw new LeaderboardError(
         detail?.error || "排行榜暂时不可用。",
         response.status,
+        Object.hasOwn(API_ERRORS, detail?.code)
+          ? detail.code
+          : Object.entries(API_ERRORS).find(
+              ([, message]) => message === detail?.error,
+            )?.[0] || "unavailable",
       );
     }
     return await response.json();
   } catch (error) {
     if (error instanceof LeaderboardError) throw error;
-    throw new LeaderboardError("无法连接排行榜，请稍后重试。");
+    throw new LeaderboardError("无法连接排行榜，请稍后重试。", 0, "network");
   }
 }
 let connecting: Promise<Board> | null = null;
@@ -85,7 +99,7 @@ export function connectPlayer(): Promise<Board> {
     if (!board.me) {
       try {
         await request("/players", "POST", {
-          name: `玩家${token().slice(0, 4)}`,
+          name: defaultPlayerName(token().slice(0, 4)),
           avatar: groups[0].members[0].id,
           token: token(),
         });
@@ -111,3 +125,21 @@ export const submitScore = (run: string, replay: Replay) =>
     "POST",
     { run, replay },
   );
+
+/** Translate stable error codes at render time so existing feedback follows language changes. */
+export function leaderboardErrorText(error: unknown, t: Translate): string {
+  if (error instanceof LeaderboardError) {
+    return t(`error.${error.code}`);
+  }
+  return t("error.unavailable");
+}
+function defaultPlayerName(id: string) {
+  let locale = detectLocale(navigator.languages || [navigator.language]);
+  try {
+    const saved = localStorage.getItem(LANGUAGE_KEY);
+    if (isLocale(saved)) locale = saved;
+  } catch {
+    /* Use browser language when storage is unavailable. */
+  }
+  return createTranslator(locale)("player.default", { id });
+}

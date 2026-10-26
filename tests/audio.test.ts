@@ -25,6 +25,9 @@ class FakeAudio extends EventTarget {
   pause() {
     this.paused = true;
   }
+  getAttribute(name: string) {
+    return name === "src" ? this.src : null;
+  }
   removeAttribute(name: string) {
     if (name === "src") this.src = "";
   }
@@ -150,6 +153,30 @@ describe("BGM lifecycle", () => {
     assert.equal(audio.paused, true);
     documentMock.dispatchEvent(new Event("pointerdown"));
     assert.equal(audio.playCalls, 1);
+    player.destroy();
+  });
+  test("manual track changes respect mute and pause and never create a second player", () => {
+    const audio = new FakeAudio();
+    const player = new BgmPlayer(asAudio(audio), {
+      source: BGM_TRACKS[0],
+      enabled: true,
+      suspended: false,
+    });
+    player.setSource(BGM_TRACKS[1]);
+    assert.equal(audio.src, BGM_TRACKS[1]);
+    assert.equal(audio.paused, false);
+    const loads = audio.loads;
+    player.setSource(BGM_TRACKS[1]);
+    assert.equal(audio.loads, loads);
+    player.setEnabled(false);
+    player.setSource(BGM_TRACKS[2]);
+    assert.equal(audio.paused, true);
+    player.setSuspended(true);
+    player.setEnabled(true);
+    assert.equal(audio.paused, true);
+    player.setSuspended(false);
+    assert.equal(audio.paused, false);
+    assert.equal(audio.src, BGM_TRACKS[2]);
     player.destroy();
   });
   test("manual pause and background suspend playback without changing the enabled preference", async () => {

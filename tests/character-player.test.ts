@@ -187,6 +187,41 @@ describe("recorded character playback", () => {
     doc.dispatchEvent(new Event("pointerdown"));
     assert.equal(contexts.length, 1);
   });
+  test("muting stops active and pending voices and blocks future playback until re-enabled", async () => {
+    const player = new CharacterEffectsPlayer(fixture);
+    player.setEnabled(false);
+    player.prepare(["member"]);
+    player.unlock();
+    assert.equal(contexts.length, 0);
+    assert.deepEqual(requests, []);
+    player.setEnabled(true);
+    await settle();
+    assert.equal(await player.play("merge", "member"), true);
+    player.setEnabled(false);
+    assert.equal(contexts[0].sources[0].stopped, true);
+    assert.equal(await player.play("win", "member"), false);
+    doc.dispatchEvent(new Event("pointerdown"));
+    assert.equal(contexts[0].state, "suspended");
+    player.setEnabled(true);
+    assert.equal(await player.play("win", "member"), true);
+    player.stop();
+    let finish!: (buffer: { source: string }) => void;
+    contexts[0].decodeAudioData = () =>
+      new Promise((resolve) => {
+        finish = resolve;
+      });
+    const pending = player.play("merge", "other");
+    await settle();
+    player.setEnabled(false);
+    player.setEnabled(true);
+    finish({ source: "/other.mp3" });
+    assert.equal(
+      await pending,
+      false,
+      "a late decode stays cancelled even after re-enabling",
+    );
+    player.destroy();
+  });
   test("background stops voices, foreground resumes the context without replaying a clip", async () => {
     const player = new CharacterEffectsPlayer(fixture);
     player.unlock();

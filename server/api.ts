@@ -1,3 +1,4 @@
+import { API_ERRORS, type ApiErrorCode } from "../src/shared/api-errors.ts";
 import { groups, WIDTH } from "../src/game/model.ts";
 import { MAX_DROPS, RULES_VERSION, type Replay } from "../src/game/replay.ts";
 import { Simulation, STEP_MS } from "../src/game/simulation.ts";
@@ -20,13 +21,13 @@ const RUN_LIFETIME = 6 * 60 * 60 * 1000;
 class ApiError extends Error {
   constructor(
     public status: number,
-    message: string,
+    public code: ApiErrorCode,
   ) {
-    super(message);
+    super(API_ERRORS[code]);
   }
 }
-function fail(status: number, message: string): never {
-  throw new ApiError(status, message);
+function fail(status: number, code: ApiErrorCode): never {
+  throw new ApiError(status, code);
 }
 export async function hash(value: string) {
   return [
@@ -39,11 +40,11 @@ export async function hash(value: string) {
 }
 function profile(body: Record<string, unknown>) {
   if (typeof body.name !== "string" || typeof body.avatar !== "string")
-    fail(400, "请输入名称并选择头像。");
+    fail(400, "profileRequired");
   const name = body.name.normalize("NFKC").trim();
   if ([...name].length < 1 || [...name].length > 16 || /[\p{C}<>]/u.test(name))
-    fail(400, "名称须为 1–16 个字，不能包含控制符或尖括号。");
-  if (!avatars.has(body.avatar)) fail(400, "请选择已有角色头像。");
+    fail(400, "invalidName");
+  if (!avatars.has(body.avatar)) fail(400, "invalidAvatar");
   return { name, avatar: body.avatar };
 }
 // Validates the entire command stream BEFORE doing any physics work.
@@ -58,12 +59,12 @@ export function validateReplay(value: unknown, elapsed: number): Replay {
     !replay.drops.length ||
     replay.drops.length > MAX_DROPS
   )
-    fail(400, "对局记录不符合当前规则或超过提交容量。");
-  if (replay.ticks * STEP_MS > elapsed + 1500) fail(400, "对局计时异常。");
+    fail(400, "invalidReplay");
+  if (replay.ticks * STEP_MS > elapsed + 1500) fail(400, "invalidTiming");
   let previous = -46;
   for (const command of replay.drops) {
     if (!Array.isArray(command) || command.length !== 2)
-      fail(400, "投放记录无效。");
+      fail(400, "invalidDrop");
     const [tick, x] = command;
     if (
       !Number.isSafeInteger(tick) ||
@@ -74,7 +75,7 @@ export function validateReplay(value: unknown, elapsed: number): Replay {
       x < 0 ||
       x > WIDTH
     )
-      fail(400, "投放位置或频率异常。");
+      fail(400, "invalidDropRate");
     previous = tick;
   }
   return replay;
@@ -91,7 +92,7 @@ export async function replayScore(seed: number, replay: Replay) {
   try {
     for (const [at, x] of replay.drops) {
       while (tick < at) {
-        if (simulation.state.over) fail(400, "游戏结束后的记录无效。");
+        if (simulation.state.over) fail(400, "afterGameOver");
         simulation.advance();
         tick++;
         // Yield between bounded batches; never hold a SQLite transaction here.
@@ -99,11 +100,11 @@ export async function replayScore(seed: number, replay: Replay) {
           await new Promise<void>((resolve) => setTimeout(resolve, 0));
       }
       simulation.setAim(x);
-      if (!simulation.drop()) fail(400, "投放记录无法回放。");
-      if (simulation.orbs.size > 180) fail(400, "棋盘数量异常。");
+      if (!simulation.drop()) fail(400, "replayFailed");
+      if (simulation.orbs.size > 180) fail(400, "invalidBoard");
     }
     while (tick < replay.ticks) {
-      if (simulation.state.over) fail(400, "游戏结束后的记录无效。");
+      if (simulation.state.over) fail(400, "afterGameOver");
       simulation.advance();
       tick++;
       if (tick % 2048 === 0)
@@ -121,11 +122,11 @@ async function readBody(request: Request): Promise<Record<string, unknown>> {
       ?.toLowerCase()
       .startsWith("application/json")
   )
-    fail(415, "请使用 JSON 请求。");
+    fail(415, "jsonRequired");
   if (Number(request.headers.get("content-length")) > MAX_BODY)
-    fail(413, "请求过大。");
+    fail(413, "bodyTooLarge");
   const reader = request.body?.getReader();
-  if (!reader) fail(400, "缺少请求内容。");
+  if (!reader) fail(400, "bodyRequired");
   let length = 0;
   const chunks: Uint8Array[] = [];
   while (true) {
@@ -134,7 +135,7 @@ async function readBody(request: Request): Promise<Record<string, unknown>> {
     length += value.byteLength;
     if (length > MAX_BODY) {
       await reader.cancel();
-      fail(413, "请求过大。");
+      fail(413, "bodyTooLarge");
     }
     chunks.push(value);
   }
@@ -147,10 +148,10 @@ async function readBody(request: Request): Promise<Record<string, unknown>> {
   try {
     const value = JSON.parse(new TextDecoder().decode(bytes));
     if (!value || typeof value !== "object" || Array.isArray(value))
-      fail(400, "请求内容无效。");
+      fail(400, "invalidBody");
     return value;
   } catch {
-    return fail(400, "请求内容无效。");
+    return fail(400, "invalidBody");
   }
 }
 export function createApi(store: Store, origin?: string, clock = Date.now) {
@@ -162,7 +163,7 @@ export function createApi(store: Store, origin?: string, clock = Date.now) {
       key,
     )[0];
     if (row && Number(row.reset) > now && Number(row.count) >= max)
-      fail(429, "操作过于频繁，请稍后再试。");
+      fail(429, "rateLimited");
     store.query(
       "INSERT INTO rate_limits(key, count, reset) VALUES (?, 1, ?) ON CONFLICT(key) DO UPDATE SET count = CASE WHEN reset <= ? THEN 1 ELSE count + 1 END, reset = CASE WHEN reset <= ? THEN excluded.reset ELSE reset END",
       key,
@@ -220,7 +221,7 @@ export function createApi(store: Store, origin?: string, clock = Date.now) {
         request.headers.has("Origin") &&
         request.headers.get("Origin") !== allowedOrigin
       )
-        fail(403, "不允许来自此站点的请求。");
+        fail(403, "originDenied");
       if (request.method === "OPTIONS")
         return new Response(null, {
           status: 204,
@@ -271,18 +272,18 @@ export function createApi(store: Store, origin?: string, clock = Date.now) {
         });
       let verifiedScore: number | undefined;
       if (route === "/api/scores" && request.method === "POST") {
-        if (!player) fail(401, "玩家凭证已失效，请重新创建玩家。");
-        if (typeof body.run !== "string") fail(400, "缺少对局凭证。");
+        if (!player) fail(401, "identityExpired");
+        if (typeof body.run !== "string") fail(400, "runRequired");
         const run = store.query(
           "SELECT * FROM runs WHERE id = ? AND player_id = ?",
           body.run,
           player.id,
         )[0];
-        if (!run) fail(404, "对局不存在或已过期。");
-        if (run.used) fail(409, "本局成绩已提交。");
+        if (!run) fail(404, "runExpired");
+        if (run.used) fail(409, "alreadySubmitted");
         const replay = validateReplay(body.replay, now - Number(run.created));
         if (verifying.has(String(player.id)))
-          fail(429, "已有成绩正在校验，请稍后再试。");
+          fail(429, "verificationBusy");
         verifying.add(String(player.id));
         try {
           verifiedScore = await replayScore(Number(run.seed), replay);
@@ -299,14 +300,14 @@ export function createApi(store: Store, origin?: string, clock = Date.now) {
           const token = body.token;
           // Client-generated random capability; never accept a caller-selected player ID.
           if (typeof token !== "string" || !/^[a-f0-9]{64}$/.test(token))
-            fail(400, "玩家凭证无效。");
+            fail(400, "invalidToken");
           if (
             store.query(
               "SELECT id FROM players WHERE token_hash = ?",
               registrationHash,
             )[0]
           )
-            fail(409, "玩家凭证已存在。请使用原有凭证。");
+            fail(409, "identityExists");
           store.query(
             "INSERT INTO players(id, token_hash, name, avatar, created) VALUES (?, ?, ?, ?, ?)",
             id,
@@ -317,7 +318,7 @@ export function createApi(store: Store, origin?: string, clock = Date.now) {
           );
           return { id };
         }
-        if (!player) fail(401, "玩家凭证已失效，请重新创建玩家。");
+        if (!player) fail(401, "identityExpired");
         if (route === "/api/player" && request.method === "PATCH") {
           const { name, avatar } = profile(body);
           store.query(
@@ -354,15 +355,15 @@ export function createApi(store: Store, origin?: string, clock = Date.now) {
           };
         }
         if (route === "/api/scores" && request.method === "POST") {
-          if (typeof body.run !== "string") fail(400, "缺少对局凭证。");
+          if (typeof body.run !== "string") fail(400, "runRequired");
           const run = store.query(
             "SELECT * FROM runs WHERE id = ? AND player_id = ?",
             body.run,
             player.id,
           )[0];
           if (!run || Number(run.expires) <= clock())
-            fail(404, "对局不存在或已过期。");
-          if (run.used) fail(409, "本局成绩已提交。");
+            fail(404, "runExpired");
+          if (run.used) fail(409, "alreadySubmitted");
           const score = verifiedScore!;
           const previousBest = Number(
             store.query("SELECT best FROM players WHERE id = ?", player.id)[0]
@@ -382,7 +383,7 @@ export function createApi(store: Store, origin?: string, clock = Date.now) {
             improved: score > previousBest,
           };
         }
-        return fail(404, "接口不存在。");
+        return fail(404, "notFound");
       });
       return new Response(JSON.stringify(data), { headers });
     } catch (error) {
@@ -394,6 +395,7 @@ export function createApi(store: Store, origin?: string, clock = Date.now) {
       const status = error instanceof ApiError ? error.status : 500;
       return new Response(
         JSON.stringify({
+          code: error instanceof ApiError ? error.code : "unavailable",
           error:
             error instanceof ApiError
               ? error.message

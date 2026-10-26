@@ -18,6 +18,7 @@ const browser = await chromium.launch({
 const base = process.env.BASE_URL || "http://localhost:5173";
 try {
   const page = await browser.newPage({
+    locale: "zh-CN",
     viewport: { width: 1280, height: 900 },
   });
   const errors = [];
@@ -26,7 +27,9 @@ try {
     Math.random = () => 0.1;
     window.__voiceEvents = [];
   });
-  await page.route("**/api/**", route => route.fulfill({ status: 404, contentType: "application/json", body: "{}" }));
+  await page.route("**/api/**", (route) =>
+    route.fulfill({ status: 404, contentType: "application/json", body: "{}" }),
+  );
   await page.goto(base, { waitUntil: "networkidle" });
   await page.evaluate(async () => {
     const effectsUrl = performance
@@ -49,7 +52,9 @@ try {
       return drop.call(this);
     };
   });
-  await page.getByRole("button", { name: "关闭背景音乐" }).click();
+  await page.getByRole("button", { name: "设置", exact: true }).click();
+  await page.getByRole("switch", { name: "背景音乐", exact: true }).click();
+  await page.keyboard.press("Escape");
   const canvas = page.locator("canvas");
   for (let i = 0; i < 32; i++) {
     await canvas.click();
@@ -127,8 +132,9 @@ try {
     "PASS highest-tier App callback plays Tokino Sora's win clip and replaces the simultaneous merge clip",
   );
   const results = await page.evaluate(async () => {
-    const { CharacterEffectsPlayer, CHARACTER_VOICES } =
-      await import("/src/audio/character-effects.ts");
+    const { CharacterEffectsPlayer, CHARACTER_VOICES } = await import(
+      "/src/audio/character-effects.ts"
+    );
     const player = new CharacterEffectsPlayer();
     player.prepare(Object.keys(CHARACTER_VOICES));
     player.unlock();

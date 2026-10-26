@@ -211,7 +211,9 @@ test("API derives scores, binds runs to identities, keeps best, and prevents rep
 test("profile allowlist, origin, body limit, auth, expiry and durable rate limits", async () => {
   const f = fixture();
   try {
-    assert.equal((await f.call("/runs", "POST", {})).status, 401);
+    const unauthorized = await f.call("/runs", "POST", {});
+    assert.equal(unauthorized.status, 401);
+    assert.equal(unauthorized.body.code, "identityExpired");
     for (const name of ["", " ", "12345678901234567", "<script>", "a\u200bb"])
       assert.equal(
         (

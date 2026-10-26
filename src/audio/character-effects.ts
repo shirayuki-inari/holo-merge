@@ -47,6 +47,7 @@ export class CharacterEffectsPlayer {
   private pending: { token: number; event: CharacterEffectEvent } | null = null;
   private token = 0;
   private disposed = false;
+  private enabled = true;
   constructor(private sources: CharacterEffectMap = CHARACTER_EFFECTS) {
     document.addEventListener("pointerdown", this.onInteraction);
     document.addEventListener("keydown", this.onInteraction);
@@ -56,9 +57,25 @@ export class CharacterEffectsPlayer {
     this.planned = new Set(
       talentIds.flatMap((id) => Object.values(this.sources[id] ?? {})),
     );
+    this.preload();
+  }
+  private preload() {
+    if (!this.enabled || this.disposed) return;
     for (const source of this.planned) {
       void this.fetchBytes(source).catch(() => {});
       if (this.context) void this.decode(source).catch(() => {});
+    }
+  }
+  setEnabled(enabled: boolean) {
+    if (this.enabled === enabled) return;
+    this.enabled = enabled;
+    if (!enabled) {
+      this.stop();
+      if (this.context?.state === "running")
+        void this.context.suspend().catch(() => {});
+    } else {
+      this.preload();
+      this.unlock();
     }
   }
   private fetchBytes(source: string): Promise<ArrayBuffer> {
@@ -94,7 +111,7 @@ export class CharacterEffectsPlayer {
   }
   /** Called synchronously by an actual input event; async physics merges reuse this unlocked context. */
   unlock = () => {
-    if (this.disposed || document.hidden) return;
+    if (this.disposed || !this.enabled || document.hidden) return;
     try {
       if (!this.context) {
         this.context = new AudioContext({ latencyHint: "interactive" });
@@ -108,7 +125,7 @@ export class CharacterEffectsPlayer {
           : Promise.resolve();
       void this.ready
         .then(() => {
-          if (this.disposed) return;
+          if (this.disposed || !this.enabled) return;
           for (const source of this.planned)
             void this.decode(source).catch(() => {});
         })
@@ -131,7 +148,13 @@ export class CharacterEffectsPlayer {
   };
   async play(event: CharacterEffectEvent, talentId: string): Promise<boolean> {
     const source = this.sources[talentId]?.[event];
-    if (!source || !this.context || this.disposed || document.hidden)
+    if (
+      !source ||
+      !this.context ||
+      this.disposed ||
+      !this.enabled ||
+      document.hidden
+    )
       return false;
     const active = this.pending?.event ?? this.current?.event;
     if (active && PRIORITY[event] < PRIORITY[active]) return false;
@@ -143,6 +166,7 @@ export class CharacterEffectsPlayer {
       const buffer = await this.decode(source);
       if (
         this.disposed ||
+        !this.enabled ||
         this.token !== token ||
         document.hidden ||
         this.context.state !== "running"

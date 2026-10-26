@@ -8,7 +8,7 @@ export function useRankedRound(round: number) {
   const [value, setValue] = useState<{
     round: number;
     session: RankedSession | null;
-    message: string;
+    message: "rank.ready" | "rank.offline" | "rank.unavailable";
   } | null>(null);
   useEffect(() => {
     let active = true;
@@ -19,7 +19,7 @@ export function useRankedRound(round: number) {
           setValue({
             round,
             session,
-            message: session ? "本局可提交排行榜" : "本局为离线游戏",
+            message: session ? "rank.ready" : "rank.offline",
           });
       })
       .catch(() => {
@@ -27,7 +27,7 @@ export function useRankedRound(round: number) {
           setValue({
             round,
             session: null,
-            message: "本局为离线游戏，排行榜暂不可用",
+            message: "rank.unavailable",
           });
       });
     return () => {
@@ -37,6 +37,7 @@ export function useRankedRound(round: number) {
   return {
     ready: value?.round === round,
     session: value?.round === round ? value.session : null,
-    message: value?.round === round ? value.message : "正在连接排行榜…",
+    message:
+      value?.round === round ? value.message : ("rank.connecting" as const),
   };
 }

@@ -23,7 +23,8 @@
     "workers:build": "esbuild workers/index.ts --bundle --format=esm --platform=browser --external:cloudflare:workers --outfile=server-dist/worker.mjs",
     "test:leaderboard-browser": "node scripts/leaderboard-browser-test.mjs",
     "test:backend": "tsx scripts/backend-smoke.ts",
-    "package:backends": "npm run server:build && npm run workers:build && python scripts/package-backends.py"
+    "package:backends": "npm run server:build && npm run workers:build && python scripts/package-backends.py",
+    "test:settings-browser": "node scripts/settings-browser-test.mjs"
   },
   "dependencies": {
     "lucide-react": "^0.468.0",

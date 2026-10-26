@@ -1415,26 +1415,6 @@ kbd {
   }
 }
 
-.header-actions .bgm-button {
-  width: auto;
-  min-width: 60px;
-  padding: 0 8px;
-  gap: 5px;
-  border-radius: 18px;
-  font-size: 9px;
-}
-.bgm-button[data-playing="true"] {
-  color: #409ab4;
-}
-@media (max-width: 360px) {
-  .header-actions .bgm-button {
-    min-width: 52px;
-    padding: 0 6px;
-    gap: 3px;
-    font-size: 8px;
-  }
-}
-
 .rank-round-status {
   text-align: center;
   font-size: 9px;
@@ -1630,5 +1610,147 @@ kbd {
     gap: 7px;
     padding-left: 2px;
     padding-right: 2px;
+  }
+}
+
+.settings-panel {
+  display: grid;
+  gap: 18px;
+}
+.setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+.setting-row label {
+  font-size: 12px;
+  font-weight: 500;
+  color: #638b96;
+}
+.setting-switch {
+  width: 40px;
+  height: 24px;
+  padding: 3px;
+  border-radius: 20px;
+  border: 1px solid #d4e5e2;
+  background: #e6eeeb;
+  flex-shrink: 0;
+  transition: background 150ms;
+}
+.setting-switch > span {
+  display: block;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px #567d8d22;
+  transition: transform 150ms;
+}
+.setting-switch[aria-checked="true"] {
+  background: #74c5ce;
+  border-color: #74c5ce;
+}
+.setting-switch[aria-checked="true"] > span {
+  transform: translateX(16px);
+}
+.track-picker {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+.track-picker button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  padding: 13px 8px;
+  border: 1px solid #d8e8e4;
+  border-radius: 13px;
+  color: #9bb7b8;
+  background: #f6faf5;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+.track-picker button:hover {
+  background: #edf7f5;
+}
+.track-picker .selected {
+  border-color: #8acfd8;
+  color: #409ab4;
+  background: #edf8f8;
+  box-shadow: 0 2px 0 #daedeb;
+}
+.voice-setting {
+  border-top: 1px dashed #d8e8e4;
+  padding-top: 19px;
+}
+.settings-panel .setting-row p {
+  margin: 5px 0 0;
+  font-size: 10px;
+  line-height: 1.7;
+}
+.language-setting {
+  align-items: flex-start;
+}
+.language-setting label {
+  padding-top: 10px;
+}
+.language-setting select {
+  max-width: 58%;
+  color: #638b96;
+  border: 1px solid #cfe4e6;
+  border-radius: 10px;
+  background: #fff;
+  padding: 9px 10px;
+  font: inherit;
+  font-size: 12px;
+}
+.settings-panel .settings-hint {
+  margin: 0;
+  font-size: 10px;
+}
+.brand,
+.brand > div {
+  min-width: 0;
+}
+.brand p {
+  overflow-wrap: anywhere;
+}
+.game-toolbar > div {
+  min-width: 0;
+}
+.game-bottom > span:first-child {
+  min-width: 0;
+}
+.game-bottom > span:first-child > svg {
+  flex-shrink: 0;
+}
+.goal-note h3 {
+  overflow-wrap: anywhere;
+}
+.help-controls > span {
+  min-width: 0;
+}
+.help-controls svg {
+  flex-shrink: 0;
+}
+.play-hint {
+  flex-wrap: wrap;
+}
+@media (max-width: 560px) {
+  .brand p {
+    font-size: 8px;
+    letter-spacing: 0.2px;
+  }
+  .game-toolbar {
+    gap: 12px;
+  }
+  .game-toolbar .board-actions {
+    flex-shrink: 0;
+  }
+  .score-card > span,
+  .best-card > span {
+    letter-spacing: 0;
   }
 }

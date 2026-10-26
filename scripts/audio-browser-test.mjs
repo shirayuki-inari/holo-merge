@@ -21,11 +21,14 @@ const base = process.env.BASE_URL || "http://localhost:5173";
 await mkdir(".qa", { recursive: true });
 try {
   const page = await browser.newPage({
+    locale: "zh-CN",
     viewport: { width: 1280, height: 900 },
   });
   const errors = [];
   page.on("pageerror", (error) => errors.push(error.message));
-  await page.route("**/api/**", route => route.fulfill({ status: 404, contentType: "application/json", body: "{}" }));
+  await page.route("**/api/**", (route) =>
+    route.fulfill({ status: 404, contentType: "application/json", body: "{}" }),
+  );
   await page.goto(base, { waitUntil: "networkidle" });
   const audio = page.locator("audio");
   assert.equal(await audio.count(), 1);
@@ -37,31 +40,38 @@ try {
     true,
     "strict autoplay policy waits for a gesture",
   );
+  // Open the panel programmatically to retain the blocked autoplay state.
+  await page
+    .getByRole("button", { name: "设置", exact: true })
+    .evaluate((el) => el.click());
   // Turning off must not count as the gesture that starts music.
-  await page.getByRole("button", { name: "关闭背景音乐" }).click();
+  await page.getByRole("switch", { name: "背景音乐", exact: true }).click();
   assert.equal(await audio.evaluate((el) => el.paused), true);
   assert.equal(await audio.evaluate((el) => el.currentTime), 0);
+  await page.keyboard.press("Escape");
   const canvas = page.locator("canvas");
   await canvas.click();
   assert.equal(await audio.evaluate((el) => el.paused), true);
   await page.reload({ waitUntil: "networkidle" });
+  await page.getByRole("button", { name: "设置", exact: true }).click();
   assert.equal(
     await page
-      .getByRole("button", { name: "开启背景音乐" })
-      .getAttribute("aria-pressed"),
+      .getByRole("switch", { name: "背景音乐", exact: true })
+      .getAttribute("aria-checked"),
     "false",
   );
   assert.equal(await audio.evaluate((el) => el.paused), true);
   console.log(
     "PASS blocked autoplay, off gesture, off during gameplay, preference survives reload",
   );
-  await page.getByRole("button", { name: "开启背景音乐" }).click();
+  await page.getByRole("switch", { name: "背景音乐", exact: true }).click();
   await page.waitForFunction(() => {
     const a = document.querySelector("audio");
     return !a.paused && a.currentTime > 0.15 && a.readyState >= 2;
   });
   const playingSource = await audio.getAttribute("src");
   assert.equal(await audio.evaluate((el) => el.volume), 0.35);
+  await page.keyboard.press("Escape");
   await page.getByRole("button", { name: "暂停游戏", exact: true }).click();
   assert.equal(await audio.evaluate((el) => el.paused), true);
   const frozen = await audio.evaluate((el) => el.currentTime);
@@ -101,7 +111,9 @@ try {
     document.dispatchEvent(new Event("visibilitychange"));
   });
   await page.waitForFunction(() => !document.querySelector("audio").paused);
-  await page.getByRole("button", { name: "关闭背景音乐" }).click();
+  await page.getByRole("button", { name: "设置", exact: true }).click();
+  await page.getByRole("switch", { name: "背景音乐", exact: true }).click();
+  await page.keyboard.press("Escape");
   await page.evaluate(() => {
     document.dispatchEvent(new Event("visibilitychange"));
     delete document.hidden;

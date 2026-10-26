@@ -82,6 +82,7 @@ jobs:
           npm run test:browser
           npm run test:audio-browser
           npm run test:character-audio
+          npm run test:settings-browser
 
       - name: Node backend and leaderboard browser tests
         shell: bash
@@ -112,6 +113,7 @@ jobs:
           done
           curl --fail --silent http://127.0.0.1:4173/ > /dev/null
           BASE_URL=http://127.0.0.1:4173 npm run test:release
+          BASE_URL=http://127.0.0.1:4173 npm run test:settings-browser
 
       - name: Upload verified deployment package
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
