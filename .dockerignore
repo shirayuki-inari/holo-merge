@@ -1,0 +1,12 @@
+node_modules
+.git
+.qa
+assets
+public
+dist
+release
+data
+server-dist
+.wrangler
+.env*
+.dev.vars*

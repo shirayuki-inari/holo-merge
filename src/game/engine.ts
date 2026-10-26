@@ -1,18 +1,6 @@
-import Matter from "matter-js";
-import {
-  clampDrop,
-  COLORS,
-  DANGER_Y,
-  HEIGHT,
-  mergeLevel,
-  mergePoints,
-  RADII,
-  randomDrop,
-  WIDTH,
-  type Talent,
-} from "./model";
-const { Engine, Bodies, Body, Composite, Events } = Matter;
-type Orb = { body: Matter.Body; level: number; born: number };
+import { Simulation, type SimulationOptions } from "./simulation";
+export type { GameState } from "./simulation";
+import { COLORS, DANGER_Y, HEIGHT, RADII, WIDTH, type Talent } from "./model";
 type Particle = {
   x: number;
   y: number;
@@ -29,58 +17,18 @@ type Ring = {
   color: string;
   points: number;
 };
-export interface GameState {
-  score: number;
-  current: number;
-  next: number;
-  highest: number;
-  count: number;
-  drops: number;
-  danger: boolean;
-  over: boolean;
-  won: boolean;
-  combo: number;
-}
-interface Options {
+interface Options extends SimulationOptions {
   lineup: Talent[];
-  onChange: (state: GameState) => void;
-  onMerge: (level: number) => void;
-  onEnd: () => void;
-  onWin: () => void;
 }
-export class HoloEngine {
-  readonly physics = Engine.create({
-    enableSleeping: true,
-    positionIterations: 6,
-    velocityIterations: 4,
-  });
-  readonly orbs = new Map<number, Orb>();
-  state: GameState = {
-    score: 0,
-    current: randomDrop(),
-    next: randomDrop(),
-    highest: 0,
-    count: 0,
-    drops: 0,
-    danger: false,
-    over: false,
-    won: false,
-    combo: 0,
-  };
+export class HoloEngine extends Simulation {
   private ctx: CanvasRenderingContext2D;
   private background = document.createElement("canvas");
   private sprites: HTMLCanvasElement[] = [];
   private particles: Particle[] = [];
   private rings: Ring[] = [];
-  private pending: [number, number][] = [];
   private frame = 0;
   private last = 0;
   private accumulator = 0;
-  private time = 0;
-  private lastDrop = -1000;
-  private lastMerge = -3000;
-  private dangerTime = 0;
-  private x = WIDTH / 2;
   private paused = false;
   private hidden = document.hidden;
   private disposed = false;
@@ -88,29 +36,10 @@ export class HoloEngine {
   private observer: ResizeObserver;
   constructor(
     private canvas: HTMLCanvasElement,
-    private options: Options,
+    private visualOptions: Options,
   ) {
+    super(visualOptions);
     this.ctx = canvas.getContext("2d", { alpha: false })!;
-    this.physics.gravity.y = 1.7;
-    Composite.add(this.physics.world, [
-      Bodies.rectangle(-20, HEIGHT / 2, 52, HEIGHT * 4, {
-        isStatic: true,
-        friction: 0.4,
-      }),
-      Bodies.rectangle(WIDTH + 20, HEIGHT / 2, 52, HEIGHT * 4, {
-        isStatic: true,
-        friction: 0.4,
-      }),
-      Bodies.rectangle(WIDTH / 2, HEIGHT + 15, WIDTH + 80, 50, {
-        isStatic: true,
-        friction: 0.6,
-      }),
-    ]);
-    Events.on(this.physics, "collisionStart", (event) => {
-      for (const pair of event.pairs)
-        if (this.orbs.has(pair.bodyA.id) && this.orbs.has(pair.bodyB.id))
-          this.pending.push([pair.bodyA.id, pair.bodyB.id]);
-    });
     this.observer = new ResizeObserver(() => this.resize());
     this.observer.observe(canvas);
     this.resize();
@@ -154,7 +83,7 @@ export class HoloEngine {
     c.fill();
   }
   private loadSprites() {
-    this.options.lineup.forEach((talent, level) => {
+    this.visualOptions.lineup.forEach((talent, level) => {
       const size = Math.ceil(RADII[level] * 2 * this.dpr);
       const sprite = document.createElement("canvas");
       sprite.width = sprite.height = size;
@@ -191,12 +120,6 @@ export class HoloEngine {
       img.src = talent.image;
     });
   }
-  setAim(x: number) {
-    this.x = clampDrop(x, this.state.current);
-  }
-  moveAim(dx: number) {
-    this.setAim(this.x + dx);
-  }
   setPaused(value: boolean) {
     this.paused = value;
     this.last = 0;
@@ -207,118 +130,34 @@ export class HoloEngine {
     } else if (!this.hidden && !this.state.over && !this.frame)
       this.frame = requestAnimationFrame(this.tick);
   }
-  drop() {
-    if (
-      this.paused ||
-      this.hidden ||
-      this.state.over ||
-      this.time - this.lastDrop < 380
-    )
-      return false;
-    this.addOrb(this.state.current, clampDrop(this.x, this.state.current), 44);
-    this.state.drops++;
-    this.lastDrop = this.time;
-    this.state.current = this.state.next;
-    this.state.next = randomDrop();
-    this.setAim(this.x);
-    this.emit();
-    return true;
+  override drop() {
+    if (this.paused || this.hidden) return false;
+    return super.drop();
   }
-  private addOrb(level: number, x: number, y: number) {
-    const body = Bodies.circle(x, y, RADII[level], {
-      restitution: 0.16,
-      friction: 0.45,
-      frictionStatic: 0.65,
-      frictionAir: 0.006,
-      density: 0.002,
-      sleepThreshold: 55,
+  protected override onMergeVisual(
+    level: number,
+    x: number,
+    y: number,
+    points: number,
+  ) {
+    this.rings.push({
+      x,
+      y,
+      radius: RADII[level],
+      life: 1,
+      color: COLORS[level],
+      points,
     });
-    this.orbs.set(body.id, { body, level, born: this.time });
-    Composite.add(this.physics.world, body);
-    return body;
-  }
-  private flushMerges() {
-    for (const [aId, bId] of this.pending) {
-      const a = this.orbs.get(aId),
-        b = this.orbs.get(bId);
-      if (!a || !b) continue;
-      const level = mergeLevel(a.level, b.level);
-      if (level === null) continue;
-      const x = clampDrop((a.body.position.x + b.body.position.x) / 2, level);
-      const y = Math.min(
-        HEIGHT - 10 - RADII[level],
-        (a.body.position.y + b.body.position.y) / 2,
-      );
-      const velocity = {
-        x: (a.body.velocity.x + b.body.velocity.x) * 0.2,
-        y: Math.min(0, (a.body.velocity.y + b.body.velocity.y) * 0.2),
-      };
-      Composite.remove(this.physics.world, [a.body, b.body]);
-      this.orbs.delete(aId);
-      this.orbs.delete(bId);
-      const body = this.addOrb(level, x, y);
-      Body.setVelocity(body, velocity);
-      const points = mergePoints(level);
-      this.state.score += points;
-      this.state.highest = Math.max(this.state.highest, level);
-      this.state.combo =
-        this.time - this.lastMerge < 1300 ? this.state.combo + 1 : 1;
-      this.lastMerge = this.time;
-      this.rings.push({
+    for (let i = 0; i < 12; i++) {
+      const angle = (Math.PI * 2 * i) / 12;
+      this.particles.push({
         x,
         y,
-        radius: RADII[level],
+        vx: Math.cos(angle) * (2 + Math.random() * 2),
+        vy: Math.sin(angle) * 3 - 1,
         life: 1,
         color: COLORS[level],
-        points,
       });
-      for (let i = 0; i < 12; i++) {
-        const angle = (Math.PI * 2 * i) / 12;
-        this.particles.push({
-          x,
-          y,
-          vx: Math.cos(angle) * (2 + Math.random() * 2),
-          vy: Math.sin(angle) * 3 - 1,
-          life: 1,
-          color: COLORS[level],
-        });
-      }
-      this.options.onMerge(level);
-      if (level === RADII.length - 1 && !this.state.won) {
-        this.state.won = true;
-        this.options.onWin();
-      }
-      this.emit();
-    }
-    this.pending.length = 0;
-  }
-  private emit() {
-    this.state.count = this.orbs.size;
-    this.options.onChange({ ...this.state });
-  }
-  private step(dt: number) {
-    if (this.state.over) return;
-    this.time += dt;
-    Engine.update(this.physics, dt);
-    this.flushMerges();
-    let danger = false;
-    for (const orb of this.orbs.values())
-      if (
-        this.time - orb.born > 1600 &&
-        orb.body.position.y - RADII[orb.level] < DANGER_Y
-      ) {
-        danger = true;
-        break;
-      }
-    this.dangerTime = danger ? this.dangerTime + dt : 0;
-    if (this.state.danger !== danger) {
-      this.state.danger = danger;
-      this.emit();
-    }
-    if (this.dangerTime > 2200) {
-      this.state.over = true;
-      this.emit();
-      this.options.onEnd();
     }
   }
   private tick = (now: number) => {
@@ -429,9 +268,6 @@ export class HoloEngine {
     cancelAnimationFrame(this.frame);
     this.observer.disconnect();
     document.removeEventListener("visibilitychange", this.visibility);
-    Events.off(this.physics, "collisionStart");
-    Composite.clear(this.physics.world, false);
-    Engine.clear(this.physics);
-    this.orbs.clear();
+    super.destroy();
   }
 }

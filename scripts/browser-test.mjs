@@ -20,6 +20,7 @@ try {
     viewport: { width: 1440, height: 1100 },
   });
   page.on("pageerror", (e) => errors.push(e.message));
+  await page.route("**/api/**", route => route.fulfill({ status: 404, contentType: "application/json", body: "{}" }));
   await page.goto(base, { waitUntil: "networkidle" });
   await page.locator("canvas").waitFor();
   await page.screenshot({ path: ".qa/desktop.png", fullPage: true });
@@ -275,6 +276,7 @@ try {
   await record.addInitScript(() => {
     Math.random = () => 0.1;
   });
+  await record.route("**/api/**", route => route.fulfill({ status: 404, contentType: "application/json", body: "{}" }));
   await record.goto(base, { waitUntil: "networkidle" });
   const recordCanvas = record.locator("canvas");
   const board = await recordCanvas.boundingBox();
@@ -322,6 +324,7 @@ try {
     deviceScaleFactor: 2,
   });
   mobile.on("pageerror", (e) => errors.push(e.message));
+  await mobile.route("**/api/**", route => route.fulfill({ status: 404, contentType: "application/json", body: "{}" }));
   await mobile.goto(base, { waitUntil: "networkidle" });
   await mobile.screenshot({ path: ".qa/mobile.png", fullPage: true });
   const bounds = await mobile.locator("canvas").boundingBox();

@@ -11,3 +11,9 @@ release/
 !.env.example
 *.log
 .DS_Store
+
+data/
+server-dist/
+.wrangler/
+.dev.vars
+.dev.vars.*

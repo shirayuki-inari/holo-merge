@@ -25,6 +25,7 @@ try {
   });
   const errors = [];
   page.on("pageerror", (error) => errors.push(error.message));
+  await page.route("**/api/**", route => route.fulfill({ status: 404, contentType: "application/json", body: "{}" }));
   await page.goto(base, { waitUntil: "networkidle" });
   const audio = page.locator("audio");
   assert.equal(await audio.count(), 1);

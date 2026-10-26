@@ -94,7 +94,8 @@ shutil.copy2(ROOT / 'deploy/nginx.conf', RELEASE / 'nginx.conf')
 3. 使用任意静态托管服务，或参考随附 nginx.conf 配置 Nginx。
    Nginx 示例监听 8080，网站目录为 /usr/share/nginx/html；根据服务器情况修改。
    配置需位于 Nginx 的 http 上下文，并由主配置加载 mime.types。
-4. 本游戏不需要后端服务或运行 Node.js。音频需以 audio/mpeg、JS 以 JavaScript MIME 类型提供。
+4. 离线游戏无需后端；排行榜需另选 Node 或 Workers 部署包，详见源码 deploy/leaderboard.md。
+   音频需以 audio/mpeg、JS 以 JavaScript MIME 类型提供。
 5. 当前包用于域名根路径部署；部署到 /game/ 等子路径前需同步调整资源路径。
 6. index.html 使用 no-cache，带哈希的 assets 文件可长期缓存；音频和头像使用短期缓存。
    丢失的音频文件应返回 404，不应回退到 index.html。

@@ -1,0 +1,25 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "holo-merge-leaderboard",
+  "main": "workers/index.ts",
+  "compatibility_date": "2026-10-19",
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "LEADERBOARD",
+        "class_name": "Leaderboard"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": [
+        "Leaderboard"
+      ]
+    }
+  ],
+  "vars": {
+    "PUBLIC_ORIGIN": "http://localhost:5173"
+  }
+}

@@ -6,7 +6,7 @@
 
 ## 运行
 
-需要 Node.js 20.19+ 或 22.12+。
+需要 Node.js 22.13+；推荐使用当前 Node LTS。
 
 ```sh
 npm install
@@ -33,6 +33,14 @@ npm run preview  # 预览生产构建
 - 随机投放前三个团体的成员。首次合成到 0 期生会显示达成提示，可以继续挑战高分；最高级成员保留在场内。
 - 新投放的成员有 1.6 秒入场宽限；之后若任何成员越过虚线持续 2.2 秒，本局结束。回落到线下可解除警告。
 - 暂停、查看弹窗、切换到后台会停止物理模拟和计时。最高分保存在浏览器本地。
+
+## 排行榜
+
+右上角奖杯打开排行榜，可输入 1–16 字名称，从现有 43 位成员中选择头像。每个浏览器拥有独立玩家身份，按玩家最高分排序；改名/换头像保留纪录。显示前 50 名和自己的名次，同分按首次达到的时间排序。
+
+联网开局会获得服务器种子。游戏结束后提交，或从排行榜点击“结算本局并提交成绩”；提交会结束本局。后端回放投放操作并计算得分，配合身份绑定、一次结算、时间/频率校验、请求限制与持久化限流。不能仅靠修改浏览器分数上榜；合法操作的机器人不在保证范围内。
+
+支持 **Node + SQLite** 和 **Cloudflare Workers + SQLite Durable Object** 两种部署，详见 [排行榜部署说明](deploy/leaderboard.md)。默认使用同域 `/api`；跨域部署前设置 `.env.example` 的 `VITE_LEADERBOARD_URL`。本地可运行 `npm run server:dev`（端口 8787），Vite 自动代理 API；也可用 `npm run workers:dev`。后端不可用时可继续离线玩，离线纪录不会补传。排行榜对局最多计分 15 分钟实际运行时间，签发 6 小时后过期。
 
 ## 实现
 
@@ -108,14 +116,16 @@ npm run package
 `npm run package` 使用 Node.js 和 Python 3，先执行生产构建，再检查入口、全部头像、角色语音和 BGM。最终生成：
 
 - `dist/`：可直接部署的静态文件，网站入口为 `index.html`。
-- `release/holo-merge-web.zip`：部署 ZIP，解压后入口直接位于顶层。
+- `release/holo-merge-web.zip`：前端部署 ZIP，解压后入口直接位于顶层。
+- `release/holo-merge-node.zip`：已打包的 Node API，无需 npm 依赖，运行 `node node.mjs`。
+- `release/holo-merge-workers.zip`：已打包的 Workers API 和 Durable Object 迁移配置。
 - `release/deployment-manifest.json`：全部文件和分类的逻辑字节数、压缩包体积、逐文件 SHA-256 及语音覆盖情况。
 - `release/SHA256SUMS`：部署 ZIP、清单和配置文件的校验值。
 - `release/nginx.conf`、`release/README.txt`：Nginx 示例及部署步骤。
 
-将 ZIP 解压到静态托管服务的网站根目录，或参考 `deploy/nginx.conf` 配置 Nginx。示例监听 8080、网站目录 `/usr/share/nginx/html`；主配置需加载 `mime.types`。生产运行不需要 Node.js、Python 或后端服务。入口文件不缓存，带哈希的 JS/CSS 长期缓存，音频与头像短期缓存；缺失资源返回 404。
+将 ZIP 解压到静态托管服务的网站根目录，或参考 `deploy/nginx.conf` 配置 Nginx。示例监听 8080、网站目录 `/usr/share/nginx/html`；主配置需加载 `mime.types`。离线玩法的生产运行无需 Node.js、Python 或后端；排行榜需部署下面两种后端之一。入口文件不缓存，带哈希的 JS/CSS 长期缓存，音频与头像短期缓存；缺失资源返回 404。
 
-当前资源路径以 `/` 开始，部署目标应是域名根目录。若要使用 `/game/` 等子目录，需要先同步修改 Vite base 和头像、音频路径。Google Fonts 是可选在线字体，有系统字体回退。部署包只由 `dist/` 生成；原始 WAV、CSV、开发依赖及 QA 目录保留在源码工作区，不进入生产包。
+当前资源路径以 `/` 开始，部署目标应是域名根目录。若要使用 `/game/` 等子目录，需要先同步修改 Vite base 和头像、音频路径。Google Fonts 是可选在线字体，有系统字体回退。前端部署包只由 `dist/` 生成；原始 WAV、CSV、开发依赖及 QA 目录保留在源码工作区，不进入生产包。
 
 部署包生成后，可将 ZIP 解压到任意目录，用静态服务器提供根路径，再运行 `BASE_URL=http://127.0.0.1:4173 npm run test:release`。此测试逐文件比对 HTTP 响应与部署清单、检查媒体 MIME/404，并验证生产页面投放 ReGLOSS 时静默、实际合成后的语音、已移除录音的 404 及响应式布局。
 
@@ -149,9 +159,9 @@ BROWSER_PATH=/path/to/chromium npm run test:character-audio # 全部 39 条录�
 
 ## GitHub CI
 
-推送、Pull Request 和手动触发都会运行 [GitHub Actions CI](https://github.com/shirayuki-inari/holo-merge/actions/workflows/ci.yml)：Node.js 22 / Python 3.12 环境下执行 `npm ci`、类型检查、单元测试和生产打包，再运行 Chromium 的玩法、BGM、39 条角色语音及解压部署包测试。测试浏览器由锁定版本的 Playwright 安装，未指定 `BROWSER_PATH` 时自动使用；Termux 继续使用系统 Chromium。
+推送、Pull Request 和手动触发都会运行 [GitHub Actions CI](https://github.com/shirayuki-inari/holo-merge/actions/workflows/ci.yml)：Node.js 22 / Python 3.12 环境下执行 `npm ci`、类型检查、单元测试和生产打包，并对 Node、Workers/workerd 分别运行 HTTP 校验，再运行 Chromium 的排行榜、玩法、BGM、39 条角色语音及解压部署包测试。测试浏览器由锁定版本的 Playwright 安装，未指定 `BROWSER_PATH` 时自动使用；Termux 继续使用系统 Chromium。
 
-成功后可从工作流的 Artifacts 下载 `holo-merge-web`，其中包含部署 ZIP、逐文件体积与 SHA-256 清单、部署说明和 Nginx 配置，保留 14 天。失败时保留浏览器截图和服务器日志 7 天。工作流不需要额外密钥，仅授予仓库内容读取权限；不自动发布网站。
+成功后可从工作流的 Artifacts 下载 `holo-merge-web`，其中包含前端及两种后端部署 ZIP、逐文件体积与 SHA-256 清单、部署说明和 Nginx 配置，保留 14 天。失败时保留浏览器截图和服务器日志 7 天。工作流不需要额外密钥，仅授予仓库内容读取权限；不自动发布网站。
 
 ## 版权
 

@@ -1,4 +1,11 @@
-import { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import {
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  useMemo,
+  type ReactNode,
+} from "react";
 import {
   ArrowDown,
   ArrowRight,
@@ -22,6 +29,10 @@ import { HoloEngine, type GameState } from "./game/engine";
 import { COLORS, createLineup, groups, WIDTH, type Talent } from "./game/model";
 import { useBackgroundMusic } from "./audio/useBackgroundMusic";
 import { CharacterEffectsPlayer } from "./audio/character-effects";
+import Leaderboard from "./Leaderboard";
+import { useRankedRound } from "./useRankedRound";
+import { seededRandom, MAX_TICKS, MAX_DROPS } from "./game/replay";
+import { submitScore, LeaderboardError } from "./leaderboard-client";
 const STORAGE_KEY = "holo-merge-best-v1";
 function storedBest() {
   try {
@@ -116,7 +127,21 @@ const initial: GameState = {
 export default function App() {
   const canvas = useRef<HTMLCanvasElement>(null),
     engine = useRef<HoloEngine | null>(null);
-  const [lineup, setLineup] = useState(createLineup);
+  const [round, setRound] = useState(0);
+  const ranked = useRankedRound(round);
+  const lineup = useMemo(
+    () =>
+      createLineup(
+        ranked.session
+          ? seededRandom(ranked.session.seed ^ 0x51f15e)
+          : Math.random,
+      ),
+    [round, ranked.session],
+  );
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [rankResult, setRankResult] = useState("");
+  const [rankReload, setRankReload] = useState(0);
   const [game, setGame] = useState<GameState>(initial);
   const [mergeNotice, setMergeNotice] = useState<{
     level: number;
@@ -128,7 +153,7 @@ export default function App() {
   const bgm = useBackgroundMusic(paused);
   const characterEffects = useRef<CharacterEffectsPlayer | null>(null);
   const [modal, setModal] = useState<
-    "help" | "restart" | "over" | "win" | "lineup" | null
+    "help" | "restart" | "over" | "win" | "lineup" | "leaderboard" | null
   >(null);
   const dragging = useRef(false),
     pointerStart = useRef({ x: 0, y: 0 });
@@ -147,8 +172,10 @@ export default function App() {
     if (paused) characterEffects.current?.stop();
   }, [paused]);
   useEffect(() => {
+    if (!ranked.ready) return;
     const instance = new HoloEngine(canvas.current!, {
       lineup,
+      seed: ranked.session?.seed,
       onChange: (state) => {
         setGame(state);
         if (state.score > bestRef.current) {
@@ -176,21 +203,59 @@ export default function App() {
       instance.destroy();
       engine.current = null;
     };
-  }, [lineup]);
+  }, [lineup, ranked.ready, ranked.session]);
   useEffect(() => {
     engine.current?.setPaused(paused || modal !== null);
-  }, [paused, modal, lineup]);
+  }, [paused, modal, lineup, ranked.ready]);
   useEffect(() => {
     if (!mergeNotice) return;
     const timeout = window.setTimeout(() => setMergeNotice(null), 1800);
     return () => window.clearTimeout(timeout);
   }, [mergeNotice]);
   function restart() {
+    if (submitting) return;
     characterEffects.current?.stop();
     setMergeNotice(null);
-    setLineup(createLineup());
+    setRound((v) => v + 1);
+    setSubmitted(false);
+    setRankResult("");
+    setGame(initial);
     setPaused(false);
     setModal(null);
+  }
+  async function submitCurrentScore() {
+    const instance = engine.current,
+      session = ranked.session;
+    if (!instance || !session || submitting || submitted) return;
+    const replay = instance.replay();
+    if (
+      replay.ticks > MAX_TICKS ||
+      replay.drops.length > MAX_DROPS ||
+      Date.now() > session.expires
+    ) {
+      setRankResult("本局已超过排行榜计分时长，可重新开始后参榜。");
+      return;
+    }
+    if (!instance.state.over) instance.finish();
+    setModal("leaderboard");
+    setSubmitting(true);
+    setRankResult("");
+    try {
+      const result = await submitScore(session.id, replay);
+      setSubmitted(true);
+      setRankReload((v) => v + 1);
+      setRankResult(
+        `已提交 ${result.acceptedScore.toLocaleString()} 分${result.improved ? "，最高纪录已更新。" : "。最高纪录保留。"}`,
+      );
+    } catch (error) {
+      if (error instanceof LeaderboardError && error.status === 409) {
+        setSubmitted(true);
+        setRankReload((v) => v + 1);
+      }
+      setRankResult((error as Error).message);
+    } finally {
+      setSubmitting(false);
+    }
   }
   function closeModal() {
     setModal(null);
@@ -198,7 +263,7 @@ export default function App() {
   }
   function drop() {
     const instance = engine.current;
-    if (!instance) return;
+    if (!instance || !ranked.ready) return;
     const level = instance.state.current;
     // Reserved for future drop recordings; the current catalog has no drop clips.
     if (instance.drop())
@@ -209,6 +274,7 @@ export default function App() {
     engine.current?.setAim(((clientX - rect.left) / rect.width) * WIDTH);
   }
   function requestRestart() {
+    if (submitting) return;
     if (game.drops && !game.over) setModal("restart");
     else restart();
   }
@@ -229,6 +295,14 @@ export default function App() {
           </div>
         </div>
         <div className="header-actions">
+          <button
+            className="icon-button"
+            onClick={() => setModal("leaderboard")}
+            aria-label="排行榜"
+            title="排行榜"
+          >
+            <Trophy size={17} />
+          </button>
           <button
             className="icon-button bgm-button"
             data-bgm-toggle
@@ -360,7 +434,12 @@ export default function App() {
               }}
             />
 
-            {game.drops === 0 && !paused && !modal && (
+            {!ranked.ready && (
+              <div className="board-overlay">
+                <p role="status">正在准备本局…</p>
+              </div>
+            )}
+            {ranked.ready && game.drops === 0 && !paused && !modal && (
               <div className="empty-welcome" aria-hidden="true">
                 <span className="welcome-tag">合成规则</span>
                 <div className="welcome-faces">
@@ -408,6 +487,14 @@ export default function App() {
               <div className="board-overlay">
                 <Heart className="end-heart" size={32} />
                 <h2>游戏结束</h2>
+                {ranked.session && !submitted && game.score > 0 && (
+                  <button
+                    className="secondary-button"
+                    onClick={() => setModal("leaderboard")}
+                  >
+                    提交成绩
+                  </button>
+                )}
                 <button className="primary-button" onClick={restart}>
                   再玩一局
                   <ArrowRight size={15} />
@@ -513,6 +600,9 @@ export default function App() {
           </span>
         </div>
       </main>
+      <div className="rank-round-status" role="status">
+        {submitted ? "本局成绩已提交" : ranked.message}
+      </div>
       <footer className="room-footer">
         <p>
           非官方粉丝游戏 <Heart size={10} />
@@ -541,9 +631,20 @@ export default function App() {
                   ? "游戏结束"
                   : modal === "win"
                     ? "已合成最高等级"
-                    : "本局成员"
+                    : modal === "leaderboard"
+                      ? "排行榜"
+                      : "本局成员"
           }
         >
+          {modal === "leaderboard" && (
+            <Leaderboard
+              canSubmit={!!ranked.session && !submitted && game.drops > 0}
+              submitting={submitting}
+              result={rankResult}
+              submit={submitCurrentScore}
+              reloadKey={rankReload}
+            />
+          )}
           {modal === "help" && (
             <>
               <div className="help-demo">
@@ -618,6 +719,17 @@ export default function App() {
                   已到达 <b>{groups[game.highest].name}</b>
                 </span>
               </div>
+              {modal === "over" &&
+                ranked.session &&
+                !submitted &&
+                game.score > 0 && (
+                  <button
+                    className="secondary-button full"
+                    onClick={() => setModal("leaderboard")}
+                  >
+                    提交成绩
+                  </button>
+                )}
               <button
                 className="primary-button full"
                 onClick={modal === "win" ? closeModal : restart}

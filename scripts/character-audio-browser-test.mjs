@@ -26,6 +26,7 @@ try {
     Math.random = () => 0.1;
     window.__voiceEvents = [];
   });
+  await page.route("**/api/**", route => route.fulfill({ status: 404, contentType: "application/json", body: "{}" }));
   await page.goto(base, { waitUntil: "networkidle" });
   await page.evaluate(async () => {
     const effectsUrl = performance
