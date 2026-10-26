@@ -105,7 +105,7 @@ try {
         "tsx",
         "--input-type=module",
         "-e",
-        `import { replayScore } from './server/api.ts'; console.log(replayScore(${seed}, ${JSON.stringify(result.replay)}));`,
+        `import { replayScore } from './server/api.ts'; console.log(await replayScore(${seed}, ${JSON.stringify(result.replay)}));`,
       ],
       { encoding: "utf8" },
     );

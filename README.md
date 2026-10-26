@@ -40,7 +40,7 @@ npm run preview  # 预览生产构建
 
 联网开局会获得服务器种子。游戏结束后提交，或从排行榜点击“结算本局并提交成绩”；提交会结束本局。后端回放投放操作并计算得分，配合身份绑定、一次结算、时间/频率校验、请求限制与持久化限流。不能仅靠修改浏览器分数上榜；合法操作的机器人不在保证范围内。
 
-支持 **Node + SQLite** 和 **Cloudflare Workers + SQLite Durable Object** 两种部署，详见 [排行榜部署说明](deploy/leaderboard.md)。默认使用同域 `/api`；跨域部署前设置 `.env.example` 的 `VITE_LEADERBOARD_URL`。本地可运行 `npm run server:dev`（端口 8787），Vite 自动代理 API；也可用 `npm run workers:dev`。后端不可用时可继续离线玩，离线纪录不会补传。排行榜对局最多计分 15 分钟实际运行时间，签发 6 小时后过期。
+支持 **Node + SQLite** 和 **Cloudflare Workers + SQLite Durable Object** 两种部署，详见 [排行榜部署说明](deploy/leaderboard.md)。默认使用同域 `/api`；跨域部署前设置 `.env.example` 的 `VITE_LEADERBOARD_URL`。本地可运行 `npm run server:dev`（端口 8787），Vite 自动代理 API；也可用 `npm run workers:dev`。后端不可用时可继续离线玩，离线纪录不会补传。排行榜没有 15 分钟计分上限；对局凭证签发 6 小时后过期。
 
 ## 实现
 

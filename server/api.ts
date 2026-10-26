@@ -1,10 +1,5 @@
 import { groups, WIDTH } from "../src/game/model.ts";
-import {
-  MAX_DROPS,
-  MAX_TICKS,
-  RULES_VERSION,
-  type Replay,
-} from "../src/game/replay.ts";
+import { MAX_DROPS, RULES_VERSION, type Replay } from "../src/game/replay.ts";
 import { Simulation, STEP_MS } from "../src/game/simulation.ts";
 
 export type Row = Record<string, string | number | null>;
@@ -59,12 +54,11 @@ export function validateReplay(value: unknown, elapsed: number): Replay {
     replay.version !== RULES_VERSION ||
     !Number.isSafeInteger(replay.ticks) ||
     replay.ticks < 0 ||
-    replay.ticks > MAX_TICKS ||
     !Array.isArray(replay.drops) ||
     !replay.drops.length ||
     replay.drops.length > MAX_DROPS
   )
-    fail(400, "对局记录不符合当前规则或超出计分时长。");
+    fail(400, "对局记录不符合当前规则或超过提交容量。");
   if (replay.ticks * STEP_MS > elapsed + 1500) fail(400, "对局计时异常。");
   let previous = -46;
   for (const command of replay.drops) {
@@ -85,7 +79,7 @@ export function validateReplay(value: unknown, elapsed: number): Replay {
   }
   return replay;
 }
-export function replayScore(seed: number, replay: Replay) {
+export async function replayScore(seed: number, replay: Replay) {
   const simulation = new Simulation({
     seed,
     onChange() {},
@@ -100,6 +94,9 @@ export function replayScore(seed: number, replay: Replay) {
         if (simulation.state.over) fail(400, "游戏结束后的记录无效。");
         simulation.advance();
         tick++;
+        // Yield between bounded batches; never hold a SQLite transaction here.
+        if (tick % 2048 === 0)
+          await new Promise<void>((resolve) => setTimeout(resolve, 0));
       }
       simulation.setAim(x);
       if (!simulation.drop()) fail(400, "投放记录无法回放。");
@@ -109,6 +106,8 @@ export function replayScore(seed: number, replay: Replay) {
       if (simulation.state.over) fail(400, "游戏结束后的记录无效。");
       simulation.advance();
       tick++;
+      if (tick % 2048 === 0)
+        await new Promise<void>((resolve) => setTimeout(resolve, 0));
     }
     return simulation.state.score;
   } finally {
@@ -156,6 +155,7 @@ async function readBody(request: Request): Promise<Record<string, unknown>> {
 }
 export function createApi(store: Store, origin?: string, clock = Date.now) {
   for (const sql of SCHEMA) store.query(sql);
+  const verifying = new Set<string>();
   function limit(key: string, max: number, duration: number, now: number) {
     const row = store.query(
       "SELECT count, reset FROM rate_limits WHERE key = ?",
@@ -269,6 +269,27 @@ export function createApi(store: Store, origin?: string, clock = Date.now) {
           if (route === "/api/scores")
             limit(`submit:${player.id}`, 20, 60_000, now);
         });
+      let verifiedScore: number | undefined;
+      if (route === "/api/scores" && request.method === "POST") {
+        if (!player) fail(401, "玩家凭证已失效，请重新创建玩家。");
+        if (typeof body.run !== "string") fail(400, "缺少对局凭证。");
+        const run = store.query(
+          "SELECT * FROM runs WHERE id = ? AND player_id = ?",
+          body.run,
+          player.id,
+        )[0];
+        if (!run) fail(404, "对局不存在或已过期。");
+        if (run.used) fail(409, "本局成绩已提交。");
+        const replay = validateReplay(body.replay, now - Number(run.created));
+        if (verifying.has(String(player.id)))
+          fail(429, "已有成绩正在校验，请稍后再试。");
+        verifying.add(String(player.id));
+        try {
+          verifiedScore = await replayScore(Number(run.seed), replay);
+        } finally {
+          verifying.delete(String(player.id));
+        }
+      }
       const data = store.transaction(() => {
         if (route === "/api/leaderboard" && request.method === "GET")
           return listing(player);
@@ -329,7 +350,6 @@ export function createApi(store: Store, origin?: string, clock = Date.now) {
             id,
             seed,
             version: RULES_VERSION,
-            maxTicks: MAX_TICKS,
             expires: now + RUN_LIFETIME,
           };
         }
@@ -340,12 +360,16 @@ export function createApi(store: Store, origin?: string, clock = Date.now) {
             body.run,
             player.id,
           )[0];
-          if (!run) fail(404, "对局不存在或已过期。");
+          if (!run || Number(run.expires) <= clock())
+            fail(404, "对局不存在或已过期。");
           if (run.used) fail(409, "本局成绩已提交。");
-          const replay = validateReplay(body.replay, now - Number(run.created));
-          const score = replayScore(Number(run.seed), replay);
+          const score = verifiedScore!;
+          const previousBest = Number(
+            store.query("SELECT best FROM players WHERE id = ?", player.id)[0]
+              .best,
+          );
           store.query("UPDATE runs SET used = 1 WHERE id = ?", run.id);
-          if (score > Number(player.best))
+          if (score > previousBest)
             store.query(
               "UPDATE players SET best = ?, best_at = ? WHERE id = ?",
               score,
@@ -355,7 +379,7 @@ export function createApi(store: Store, origin?: string, clock = Date.now) {
           return {
             ...listing(player),
             acceptedScore: score,
-            improved: score > Number(player.best),
+            improved: score > previousBest,
           };
         }
         return fail(404, "接口不存在。");

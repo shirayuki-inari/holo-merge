@@ -3,13 +3,12 @@ import assert from "node:assert/strict";
 import { createApi, hash, replayScore, validateReplay } from "../server/api.ts";
 import { sqliteStore } from "../server/sqlite.ts";
 import { Simulation } from "../src/game/simulation.ts";
-import { MAX_TICKS } from "../src/game/replay.ts";
 import { groups } from "../src/game/model.ts";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 const avatar = groups[0].members[0].id;
-function recorded(seed: number, count = 12) {
+function recorded(seed: number, count = 12, tailTicks = 0) {
   const game = new Simulation({
     seed,
     onChange() {},
@@ -22,6 +21,8 @@ function recorded(seed: number, count = 12) {
     assert.equal(game.drop(), true);
     for (let t = 0; t < 110; t++) game.advance();
   }
+  for (let tick = 0; tick < tailTicks; tick++) game.advance();
+  assert.equal(game.state.over, false);
   const result = { replay: game.replay(), score: game.state.score };
   game.destroy();
   return result;
@@ -77,12 +78,12 @@ function fixture() {
     },
   };
 }
-test("seeded physics records replay independently of unrelated Matter worlds", () => {
+test("seeded physics records replay independently of unrelated Matter worlds", async () => {
   for (const seed of [0, 1, 42, 0xffffffff]) {
     const result = recorded(seed);
     assert.ok(result.score > 0);
-    assert.equal(replayScore(seed, result.replay), result.score);
-    assert.equal(replayScore(seed, result.replay), result.score);
+    assert.equal(await replayScore(seed, result.replay), result.score);
+    assert.equal(await replayScore(seed, result.replay), result.score);
   }
 });
 test("replay validation rejects huge, accelerated, malformed or too-fast records before simulation", () => {
@@ -98,7 +99,7 @@ test("replay validation rejects huge, accelerated, malformed or too-fast records
   for (const replay of [
     null,
     { ...valid, version: 2 },
-    { ...valid, ticks: MAX_TICKS + 1 },
+    { ...valid, ticks: Number.MAX_SAFE_INTEGER },
     { ...valid, ticks: -1 },
     { ...valid, ticks: 1.5 },
     { ...valid, drops: [] },
@@ -342,6 +343,87 @@ test("top 50 ranking keeps an out-of-list player's rank and concurrent submissio
       f.call("/scores", "POST", { run: run.id, replay }),
     ]);
     assert.deepEqual(results.map((r) => r.status).sort(), [200, 409]);
+  } finally {
+    f.store.close();
+  }
+});
+
+test("a real twenty-minute run submits its full score while other API requests remain responsive", async () => {
+  const f = fixture();
+  try {
+    await f.register();
+    const run = await f.run();
+    assert.equal("maxTicks" in run, false);
+    f.store.query("UPDATE runs SET seed = 0 WHERE id = ?", run.id);
+    const result = recorded(0, 12, 20 * 60 * 120);
+    assert.ok(result.replay.ticks > 15 * 60 * 120);
+    assert.ok(result.score > 0);
+    f.advance(result.replay.ticks * (1000 / 120) + 1000);
+    const pending = f.call("/scores", "POST", {
+      run: run.id,
+      replay: result.replay,
+    });
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    const board = await f.call("/leaderboard");
+    assert.equal(
+      board.status,
+      200,
+      "verification must not hold a database transaction",
+    );
+    const repeated = await f.call("/scores", "POST", {
+      run: run.id,
+      replay: result.replay,
+    });
+    assert.equal(
+      repeated.status,
+      429,
+      "parallel validation for one player is bounded",
+    );
+    const response = await pending;
+    assert.equal(response.status, 200, JSON.stringify(response.body));
+    assert.equal(response.body.acceptedScore, result.score);
+    assert.equal(response.body.me.score, result.score);
+    assert.equal(
+      (await f.call("/scores", "POST", { run: run.id, replay: result.replay }))
+        .status,
+      409,
+    );
+  } finally {
+    f.store.close();
+  }
+});
+
+test("asynchronous validation preserves a newer best and rechecks expiry before settlement", async () => {
+  const f = fixture();
+  try {
+    await f.register();
+    let run = await f.run();
+    const result = recorded(run.seed, 8, 5000);
+    f.advance(100_000);
+    const pending = f.call("/scores", "POST", {
+      run: run.id,
+      replay: result.replay,
+    });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    f.store.query(
+      "UPDATE players SET best = ?, best_at = 1",
+      result.score + 100,
+    );
+    const response = await pending;
+    assert.equal(response.status, 200);
+    assert.equal(response.body.improved, false);
+    assert.equal(response.body.me.score, result.score + 100);
+    run = await f.run();
+    f.store.query("UPDATE runs SET seed = ? WHERE id = ?", run.seed, run.id);
+    const expired = f.call("/scores", "POST", {
+      run: run.id,
+      replay: { version: 1, ticks: 5000, drops: [[0, 220]] },
+    });
+    // Allow enough wall time to validate the replay, then expire while it yields.
+    f.advance(100_000);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    f.advance(6 * 3600_000);
+    assert.equal((await expired).status, 404);
   } finally {
     f.store.close();
   }

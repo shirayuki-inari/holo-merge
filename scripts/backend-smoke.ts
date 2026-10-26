@@ -38,13 +38,13 @@ const simulation = new Simulation({
   onWin() {},
   onEnd() {},
 });
-for (let i = 0; i < 8; i++) {
+for (let i = 0; i < 24; i++) {
   simulation.drop();
   for (let t = 0; t < 90; t++) simulation.advance();
 }
 const replay = simulation.replay();
 assert.ok(simulation.state.score > 0);
-await new Promise((r) => setTimeout(r, 6200)); // Session wall clock must cover actual simulation time.
+await new Promise((r) => setTimeout(r, 18_100)); // Session wall clock must cover actual simulation time.
 const result = await call("/scores", "POST", {
   run: run.data.id,
   replay,

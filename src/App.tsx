@@ -31,7 +31,7 @@ import { useBackgroundMusic } from "./audio/useBackgroundMusic";
 import { CharacterEffectsPlayer } from "./audio/character-effects";
 import Leaderboard from "./Leaderboard";
 import { useRankedRound } from "./useRankedRound";
-import { seededRandom, MAX_TICKS, MAX_DROPS } from "./game/replay";
+import { seededRandom, MAX_DROPS } from "./game/replay";
 import { submitScore, LeaderboardError } from "./leaderboard-client";
 const STORAGE_KEY = "holo-merge-best-v1";
 function storedBest() {
@@ -228,12 +228,12 @@ export default function App() {
       session = ranked.session;
     if (!instance || !session || submitting || submitted) return;
     const replay = instance.replay();
-    if (
-      replay.ticks > MAX_TICKS ||
-      replay.drops.length > MAX_DROPS ||
-      Date.now() > session.expires
-    ) {
-      setRankResult("本局已超过排行榜计分时长，可重新开始后参榜。");
+    if (replay.drops.length > MAX_DROPS) {
+      setRankResult("本局投放记录超过提交容量，请重新开始后参榜。");
+      return;
+    }
+    if (Date.now() > session.expires) {
+      setRankResult("本局排行榜凭证已过期，请重新开始后参榜。");
       return;
     }
     if (!instance.state.over) instance.finish();

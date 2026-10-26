@@ -15,7 +15,6 @@ export interface RankedSession {
   id: string;
   seed: number;
   version: number;
-  maxTicks: number;
   expires: number;
 }
 const base = (import.meta.env.VITE_LEADERBOARD_URL || "").replace(/\/$/, "");

@@ -202,8 +202,7 @@ export default function Leaderboard({
         </ol>
       )}
       <p className="rank-help">
-        每局最多计分 15
-        分钟，暂停不计时。玩家身份保存在此浏览器，清除网站数据后无法找回原纪录。
+        玩家身份保存在此浏览器，清除网站数据后无法找回原纪录。
       </p>
     </div>
   );
