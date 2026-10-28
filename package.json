@@ -26,7 +26,8 @@
     "package:backends": "npm run server:build && npm run workers:build && python scripts/package-backends.py",
     "test:settings-browser": "node scripts/settings-browser-test.mjs",
     "test:admin": "tsx scripts/admin-smoke.ts",
-    "test:admin-browser": "node scripts/admin-browser-test.mjs"
+    "test:admin-browser": "node scripts/admin-browser-test.mjs",
+    "test:admin-release": "node scripts/admin-release-test.mjs"
   },
   "dependencies": {
     "lucide-react": "^0.468.0",

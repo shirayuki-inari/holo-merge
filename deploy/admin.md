@@ -58,3 +58,5 @@ BASE_URL=http://127.0.0.1:5175 npm run test:admin-browser
 Node 与 workerd 的 HTTP 测试验证认证、Cookie、CSRF、概览、编辑、清除、冲突与审计；浏览器测试覆盖完整管理操作、修改即时影响公开榜单、三语言、320–1280px 布局、会话恢复与退出，以及管理页面不加载游戏音频。
 
 安全实现参考：[MDN Set-Cookie](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Set-Cookie)、[OWASP CSRF Prevention](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html)。
+
+解压部署包后，静态服务器下运行 `BASE_URL=http://127.0.0.1:4173 npm run test:admin-release`，验证实际 CSS 布局、独立加载管理资源、最长分数、三语言与手机布局。此测试的管理数据全部由浏览器拦截模拟，不写入数据库。

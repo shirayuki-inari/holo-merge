@@ -117,6 +117,7 @@ jobs:
           curl --fail --silent http://127.0.0.1:4173/ > /dev/null
           BASE_URL=http://127.0.0.1:4173 npm run test:release
           BASE_URL=http://127.0.0.1:4173 npm run test:settings-browser
+          BASE_URL=http://127.0.0.1:4173 npm run test:admin-release
 
       - name: Upload verified deployment package
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4

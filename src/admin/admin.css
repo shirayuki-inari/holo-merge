@@ -711,7 +711,7 @@
 }
 @media (max-width: 760px) {
   .admin-metric strong.admin-large-number {
-    font-size: 17px;
+    font-size: 16px;
     letter-spacing: -0.7px;
   }
 }
