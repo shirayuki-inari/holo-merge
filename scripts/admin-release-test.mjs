@@ -132,7 +132,7 @@ try {
             return value.scrollWidth <= value.clientWidth;
           }),
         ),
-        `${locale}: long score fits`,
+        `${locale}:${width}: long score fits: ${JSON.stringify(await page.locator(".admin-metric strong").evaluateAll((values) => values.map((el) => ({ text: el.textContent, scroll: el.scrollWidth, client: el.clientWidth, font: getComputedStyle(el).fontSize, display: getComputedStyle(el).display, className: el.className }))))}`,
       );
     }
   }
