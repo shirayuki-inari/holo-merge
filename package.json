@@ -24,7 +24,9 @@
     "test:leaderboard-browser": "node scripts/leaderboard-browser-test.mjs",
     "test:backend": "tsx scripts/backend-smoke.ts",
     "package:backends": "npm run server:build && npm run workers:build && python scripts/package-backends.py",
-    "test:settings-browser": "node scripts/settings-browser-test.mjs"
+    "test:settings-browser": "node scripts/settings-browser-test.mjs",
+    "test:admin": "tsx scripts/admin-smoke.ts",
+    "test:admin-browser": "node scripts/admin-browser-test.mjs"
   },
   "dependencies": {
     "lucide-react": "^0.468.0",

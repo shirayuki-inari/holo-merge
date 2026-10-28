@@ -3,6 +3,7 @@ import { createApi, type Store } from "../server/api.ts";
 interface Env {
   LEADERBOARD: DurableObjectNamespace<Leaderboard>;
   PUBLIC_ORIGIN: string;
+  ADMIN_PASSWORD?: string;
 }
 // One strongly consistent, SQLite-backed object owns the small community leaderboard.
 export class Leaderboard extends DurableObject<Env> {
@@ -19,7 +20,12 @@ export class Leaderboard extends DurableObject<Env> {
         return ctx.storage.transactionSync(callback);
       },
     };
-    this.api = createApi(store, env.PUBLIC_ORIGIN);
+    this.api = createApi(
+      store,
+      env.PUBLIC_ORIGIN,
+      Date.now,
+      env.ADMIN_PASSWORD,
+    );
   }
   fetch(request: Request) {
     return this.api(

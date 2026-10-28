@@ -53,7 +53,7 @@ jobs:
         run: |
           mkdir -p .qa
           npm run workers:check
-          node node_modules/wrangler/bin/wrangler.js dev --port 8788 > .qa/workers.log 2>&1 &
+          node node_modules/wrangler/bin/wrangler.js dev --port 8788 --var ADMIN_PASSWORD:test-only-administrator-password > .qa/workers.log 2>&1 &
           server_pid=$!
           trap 'kill "$server_pid" 2>/dev/null || true' EXIT
           for attempt in {1..60}; do
@@ -62,6 +62,7 @@ jobs:
           done
           curl --fail --silent http://127.0.0.1:8788/api/leaderboard > /dev/null
           API_URL=http://127.0.0.1:8788 npm run test:backend
+          API_URL=http://127.0.0.1:8788 ADMIN_ORIGIN=http://localhost:5173 npm run test:admin
 
       - name: Install Chromium
         run: npx playwright-core install --with-deps chromium
@@ -87,7 +88,7 @@ jobs:
       - name: Node backend and leaderboard browser tests
         shell: bash
         run: |
-          DATABASE_PATH=.qa/ci-ranking.sqlite PUBLIC_ORIGIN=http://127.0.0.1:5175 node server-dist/node.mjs > .qa/node-server.log 2>&1 &
+          ADMIN_PASSWORD=test-only-administrator-password DATABASE_PATH=.qa/ci-ranking.sqlite PUBLIC_ORIGIN=http://127.0.0.1:5175 node server-dist/node.mjs > .qa/node-server.log 2>&1 &
           api_pid=$!
           node node_modules/vite/bin/vite.js --host 127.0.0.1 --port 5175 --strictPort > .qa/leaderboard-vite.log 2>&1 &
           vite_pid=$!
@@ -98,6 +99,8 @@ jobs:
           done
           API_URL=http://127.0.0.1:8787 npm run test:backend
           BASE_URL=http://127.0.0.1:5175 npm run test:leaderboard-browser
+          API_URL=http://127.0.0.1:8787 npm run test:admin
+          BASE_URL=http://127.0.0.1:5175 npm run test:admin-browser
 
       - name: Test extracted deployment package
         shell: bash

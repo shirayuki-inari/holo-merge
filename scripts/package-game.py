@@ -29,6 +29,7 @@ class Entrypoints(HTMLParser):
         if url and url.startswith('/'):
             require_asset(url)
 Entrypoints().feed((DIST / 'index.html').read_text())
+Entrypoints().feed((DIST / 'admin/index.html').read_text())
 voices = json.loads((ROOT / 'src/audio/character-voices.json').read_text())
 expected_voice_paths = set()
 for member in voices.values():
@@ -42,7 +43,7 @@ bgm = sorted((DIST / 'audio/bgm').glob('*.mp3'))
 assert len(bgm) == 3, 'Package all three BGM files'
 voice_files = list((DIST / 'audio/characters').glob('*/*.mp3'))
 assert set(voice_files) == expected_voice_paths, 'Remove missing or unreferenced character audio files'
-allowed_top = {'index.html', 'favicon.svg', 'assets', 'audio', 'avatars'}
+allowed_top = {'index.html', 'favicon.svg', 'assets', 'audio', 'avatars', 'admin'}
 assert all(path.relative_to(DIST).parts[0] in allowed_top for path in files), 'Unexpected file in dist'
 assert not any(path.suffix.lower() in {'.wav', '.csv', '.ts', '.tsx', '.map'} for path in files)
 RELEASE.mkdir(exist_ok=True)

@@ -18,7 +18,7 @@ def pack(name, files):
     with zipfile.ZipFile(path) as archive:
         assert archive.testzip() is None
     return path
-common = {'README.md': (ROOT / 'deploy/leaderboard.md').read_bytes()}
+common = {'README.md': (ROOT / 'deploy/leaderboard.md').read_bytes(), 'admin.md': (ROOT / 'deploy/admin.md').read_bytes()}
 node = pack('holo-merge-node.zip', dict(common, **{
     'node.mjs': (ROOT / 'server-dist/node.mjs').read_bytes(),
     'leaderboard.env.example': (ROOT / 'deploy/leaderboard.env.example').read_bytes(),

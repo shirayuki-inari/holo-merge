@@ -30,7 +30,8 @@ function useLanguage() {
   const t = useMemo(() => createTranslator(locale), [locale]);
   useEffect(() => {
     document.documentElement.lang = locale;
-    document.title = t("app.title");
+    if (!/^\/admin(?:\/|$)/.test(location.pathname))
+      document.title = t("app.title");
     document
       .querySelector('meta[name="description"]')
       ?.setAttribute("content", t("app.description"));

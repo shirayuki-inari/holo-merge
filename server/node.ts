@@ -10,6 +10,8 @@ const store = sqliteStore(filename);
 const handler = createApi(
   store,
   process.env.PUBLIC_ORIGIN || "http://localhost:5173",
+  Date.now,
+  process.env.ADMIN_PASSWORD,
 );
 const port = Number(process.env.PORT || 8787);
 const host = process.env.HOST || "127.0.0.1";

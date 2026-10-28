@@ -57,6 +57,10 @@ VITE_LEADERBOARD_URL=https://holo-merge-leaderboard.example.workers.dev npm run 
 
 Wrangler/workerd 需要受支持的桌面或 Linux 系统；当前 Android/Termux 环境不能运行 workerd。本地可构建 Worker 并做类型检查，真实 Workers 运行时测试由 Linux CI 执行。生产对局回放在 Durable Object 中执行，CPU 预算与计费以 Cloudflare 的 Durable Objects 当前限制为准，不要依赖普通 Worker 免费请求的 CPU 额度。
 
+## 管理面板
+
+可选启用同域 `/admin/`，展示数据库运行概览并管理排行榜，支持修改原因、审计记录及并发修改检查。不改变原游戏上报数据。Node 设置私有环境变量 `ADMIN_PASSWORD`，Workers 使用 `wrangler secret put ADMIN_PASSWORD`，不少于 16 字符；未配置默认关闭。管理 API 必须与页面同源。详见 [管理面板部署、统计口径与维护](admin.md)。
+
 ## 计分、玩家与校验规则
 
 - 浏览器生成 256 位随机凭证，服务端只保存 SHA-256 摘要。名称允许 1–16 个 Unicode 字符，头像必须来自现有 43 位角色。改名/换头像保留身份与最高分；名称允许重复。没有账号恢复功能，清理网站数据会丢失该浏览器身份。

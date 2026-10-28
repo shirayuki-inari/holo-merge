@@ -1,5 +1,8 @@
-import { API_ERRORS, type ApiErrorCode } from "../src/shared/api-errors.ts";
-import { groups, WIDTH } from "../src/game/model.ts";
+import { ApiError, fail, hash, profile, readBody } from "./http.ts";
+export { hash } from "./http.ts";
+import { ADMIN_SCHEMA, createAdmin } from "./admin.ts";
+import { initializeMetrics, recordMetric } from "./metrics.ts";
+import { WIDTH } from "../src/game/model.ts";
 import { MAX_DROPS, RULES_VERSION, type Replay } from "../src/game/replay.ts";
 import { Simulation, STEP_MS } from "../src/game/simulation.ts";
 
@@ -15,38 +18,7 @@ export const SCHEMA = [
   `CREATE INDEX IF NOT EXISTS run_expiry ON runs(expires)`,
   `CREATE TABLE IF NOT EXISTS rate_limits (key TEXT PRIMARY KEY, count INTEGER NOT NULL, reset INTEGER NOT NULL)`,
 ];
-const avatars = new Set(groups.flatMap((g) => g.members.map((m) => m.id)));
-const MAX_BODY = 160_000;
 const RUN_LIFETIME = 6 * 60 * 60 * 1000;
-class ApiError extends Error {
-  constructor(
-    public status: number,
-    public code: ApiErrorCode,
-  ) {
-    super(API_ERRORS[code]);
-  }
-}
-function fail(status: number, code: ApiErrorCode): never {
-  throw new ApiError(status, code);
-}
-export async function hash(value: string) {
-  return [
-    ...new Uint8Array(
-      await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value)),
-    ),
-  ]
-    .map((n) => n.toString(16).padStart(2, "0"))
-    .join("");
-}
-function profile(body: Record<string, unknown>) {
-  if (typeof body.name !== "string" || typeof body.avatar !== "string")
-    fail(400, "profileRequired");
-  const name = body.name.normalize("NFKC").trim();
-  if ([...name].length < 1 || [...name].length > 16 || /[\p{C}<>]/u.test(name))
-    fail(400, "invalidName");
-  if (!avatars.has(body.avatar)) fail(400, "invalidAvatar");
-  return { name, avatar: body.avatar };
-}
 // Validates the entire command stream BEFORE doing any physics work.
 export function validateReplay(value: unknown, elapsed: number): Replay {
   const replay = value as Replay;
@@ -115,47 +87,15 @@ export async function replayScore(seed: number, replay: Replay) {
     simulation.destroy();
   }
 }
-async function readBody(request: Request): Promise<Record<string, unknown>> {
-  if (
-    !request.headers
-      .get("content-type")
-      ?.toLowerCase()
-      .startsWith("application/json")
-  )
-    fail(415, "jsonRequired");
-  if (Number(request.headers.get("content-length")) > MAX_BODY)
-    fail(413, "bodyTooLarge");
-  const reader = request.body?.getReader();
-  if (!reader) fail(400, "bodyRequired");
-  let length = 0;
-  const chunks: Uint8Array[] = [];
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    length += value.byteLength;
-    if (length > MAX_BODY) {
-      await reader.cancel();
-      fail(413, "bodyTooLarge");
-    }
-    chunks.push(value);
-  }
-  const bytes = new Uint8Array(length);
-  let offset = 0;
-  for (const chunk of chunks) {
-    bytes.set(chunk, offset);
-    offset += chunk.length;
-  }
-  try {
-    const value = JSON.parse(new TextDecoder().decode(bytes));
-    if (!value || typeof value !== "object" || Array.isArray(value))
-      fail(400, "invalidBody");
-    return value;
-  } catch {
-    return fail(400, "invalidBody");
-  }
-}
-export function createApi(store: Store, origin?: string, clock = Date.now) {
-  for (const sql of SCHEMA) store.query(sql);
+export function createApi(
+  store: Store,
+  origin?: string,
+  clock = Date.now,
+  adminPassword?: string,
+) {
+  for (const sql of [...SCHEMA, ...ADMIN_SCHEMA]) store.query(sql);
+  initializeMetrics(store, clock());
+  const admin = createAdmin(store, origin, clock, adminPassword);
   const verifying = new Set<string>();
   function limit(key: string, max: number, duration: number, now: number) {
     const row = store.query(
@@ -207,6 +147,9 @@ export function createApi(store: Store, origin?: string, clock = Date.now) {
     return { entries, me };
   }
   return async (request: Request, ip: string): Promise<Response> => {
+    if (new URL(request.url).pathname.startsWith("/api/admin"))
+      return admin(request, ip);
+    let submissionPlayer = false;
     const allowedOrigin = origin || new URL(request.url).origin;
     const headers: Record<string, string> = {
       "Content-Type": "application/json; charset=utf-8",
@@ -263,6 +206,8 @@ export function createApi(store: Store, origin?: string, clock = Date.now) {
             tokenHash,
           )[0]
         : undefined;
+      submissionPlayer =
+        !!player && route === "/api/scores" && request.method === "POST";
       if (player)
         store.transaction(() => {
           if (route === "/api/runs")
@@ -282,8 +227,7 @@ export function createApi(store: Store, origin?: string, clock = Date.now) {
         if (!run) fail(404, "runExpired");
         if (run.used) fail(409, "alreadySubmitted");
         const replay = validateReplay(body.replay, now - Number(run.created));
-        if (verifying.has(String(player.id)))
-          fail(429, "verificationBusy");
+        if (verifying.has(String(player.id))) fail(429, "verificationBusy");
         verifying.add(String(player.id));
         try {
           verifiedScore = await replayScore(Number(run.seed), replay);
@@ -347,6 +291,7 @@ export function createApi(store: Store, origin?: string, clock = Date.now) {
             now,
             now + RUN_LIFETIME,
           );
+          recordMetric(store, now, "started");
           return {
             id,
             seed,
@@ -361,8 +306,7 @@ export function createApi(store: Store, origin?: string, clock = Date.now) {
             body.run,
             player.id,
           )[0];
-          if (!run || Number(run.expires) <= clock())
-            fail(404, "runExpired");
+          if (!run || Number(run.expires) <= clock()) fail(404, "runExpired");
           if (run.used) fail(409, "alreadySubmitted");
           const score = verifiedScore!;
           const previousBest = Number(
@@ -377,6 +321,7 @@ export function createApi(store: Store, origin?: string, clock = Date.now) {
               now,
               player.id,
             );
+          recordMetric(store, clock(), "accepted", score);
           return {
             ...listing(player),
             acceptedScore: score,
@@ -387,6 +332,13 @@ export function createApi(store: Store, origin?: string, clock = Date.now) {
       });
       return new Response(JSON.stringify(data), { headers });
     } catch (error) {
+      if (submissionPlayer) {
+        try {
+          store.transaction(() => recordMetric(store, clock(), "rejected"));
+        } catch {
+          console.error("Unable to record submission metric");
+        }
+      }
       if (!(error instanceof ApiError))
         console.error(
           "Leaderboard request failed",
