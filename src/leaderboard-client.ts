@@ -25,7 +25,8 @@ export interface RankedSession {
   version: number;
   expires: number;
 }
-const base = (import.meta.env.VITE_LEADERBOARD_URL || "").replace(/\/$/, "");
+// Optional chaining lets Node unit tests import this module (Vite still inlines the value).
+const base = (import.meta.env?.VITE_LEADERBOARD_URL || "").replace(/\/$/, "");
 const key = "holo-merge-player-v1";
 let memoryToken = "";
 function token() {

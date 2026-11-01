@@ -1,21 +1,7 @@
 import assert from "node:assert/strict";
-const android = process.platform === "android";
-if (android) Object.defineProperty(process, "platform", { value: "linux" });
-const { chromium } = await import("playwright-core");
-const browser = await chromium.launch({
-  executablePath:
-    process.env.BROWSER_PATH ||
-    (android
-      ? "/data/data/com.termux/files/usr/bin/chromium-browser"
-      : chromium.executablePath()),
-  args: [
-    "--no-sandbox",
-    "--disable-dev-shm-usage",
-    "--disable-gpu",
-    "--autoplay-policy=document-user-activation-required",
-  ],
-});
-const base = process.env.BASE_URL || "http://localhost:5173";
+import { baseUrl, launch, zh } from "./browser-helpers.mjs";
+const browser = await launch(["--autoplay-policy=document-user-activation-required"]);
+const base = baseUrl("http://localhost:5173");
 try {
   const page = await browser.newPage({
     locale: "zh-CN",
@@ -52,8 +38,8 @@ try {
       return drop.call(this);
     };
   });
-  await page.getByRole("button", { name: "设置", exact: true }).click();
-  await page.getByRole("switch", { name: "背景音乐", exact: true }).click();
+  await page.getByRole("button", { name: zh("settings.title"), exact: true }).click();
+  await page.getByRole("switch", { name: zh("settings.bgm"), exact: true }).click();
   await page.keyboard.press("Escape");
   const canvas = page.locator("canvas");
   for (let i = 0; i < 32; i++) {
@@ -110,7 +96,7 @@ try {
     engine.addOrb(9, 302.8, 468);
     engine.setPaused(false);
   });
-  await page.getByRole("dialog", { name: "已合成最高等级" }).waitFor();
+  await page.getByRole("dialog", { name: zh("result.win") }).waitFor();
   await page.waitForFunction(() =>
     window.__voiceEvents.some(
       (event) =>
@@ -131,47 +117,8 @@ try {
   console.log(
     "PASS highest-tier App callback plays Tokino Sora's win clip and replaces the simultaneous merge clip",
   );
-  const results = await page.evaluate(async () => {
-    const { CharacterEffectsPlayer, CHARACTER_VOICES } = await import(
-      "/src/audio/character-effects.ts"
-    );
-    const player = new CharacterEffectsPlayer();
-    player.prepare(Object.keys(CHARACTER_VOICES));
-    player.unlock();
-    const report = [];
-    try {
-      for (const [id, role] of Object.entries(CHARACTER_VOICES))
-        for (const event of ["drop", "merge", "win"]) {
-          if (!role[event]) {
-            if (await player.play(event, id))
-              throw new Error(`Unconfigured voice started: ${id}/${event}`);
-            continue;
-          }
-          if (!(await player.play(event, id)))
-            throw new Error(`Voice did not start: ${id}/${event}`);
-          const buffer = player.current.node.buffer;
-          if (Math.abs(buffer.duration - role[event].durationSeconds) > 0.1)
-            throw new Error(`Voice truncated: ${id}/${event}`);
-          const samples = buffer.getChannelData(0);
-          let energy = 0;
-          for (const value of samples) energy += value * value;
-          if (energy / samples.length < 1e-7)
-            throw new Error(`Silent voice: ${id}/${event}`);
-          report.push({ id, event, duration: buffer.duration });
-          player.stop();
-        }
-    } finally {
-      player.destroy();
-    }
-    return report;
-  });
-  assert.equal(results.length, 39);
-  assert.equal(results.filter((record) => record.event === "merge").length, 34);
-  assert.equal(results.filter((record) => record.event === "win").length, 5);
-  assert.equal(new Set(results.map((record) => record.id)).size, 34);
-  console.log(
-    "PASS all 39 shipped MP3 recordings decoded and started as real Web Audio sources, with non-silent full-duration waveforms",
-  );
+  // Every shipped clip's format, length and non-silent source are checked in
+  // Node (tests/media.test.ts); real decoding is exercised by the plays above.
   await page.reload({ waitUntil: "networkidle" });
   for (const width of [320, 390, 768, 1280]) {
     await page.setViewportSize({ width, height: 900 });

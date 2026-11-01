@@ -1,17 +1,8 @@
 import assert from "node:assert/strict";
 import { mkdir } from "node:fs/promises";
-const android = process.platform === "android";
-if (android) Object.defineProperty(process, "platform", { value: "linux" });
-const { chromium } = await import("playwright-core");
-const browser = await chromium.launch({
-  executablePath:
-    process.env.BROWSER_PATH ||
-    (android
-      ? "/data/data/com.termux/files/usr/bin/chromium-browser"
-      : chromium.executablePath()),
-  args: ["--no-sandbox", "--disable-dev-shm-usage", "--disable-gpu"],
-});
-const base = process.env.BASE_URL || "http://127.0.0.1:4173";
+import { adminEn, adminJa, adminZh, baseUrl, launch } from "./browser-helpers.mjs";
+const browser = await launch();
+const base = baseUrl("http://127.0.0.1:4173");
 try {
   const page = await browser.newPage({
       locale: "zh-CN",
@@ -111,9 +102,9 @@ try {
   await mkdir(".qa", { recursive: true });
   await page.screenshot({ path: ".qa/admin-release.png", fullPage: true });
   for (const [locale, label] of [
-    ["en", "Overview"],
-    ["ja", "稼働状況"],
-    ["zh-CN", "运行概览"],
+    ["en", adminEn("overview")],
+    ["ja", adminJa("overview")],
+    ["zh-CN", adminZh("overview")],
   ]) {
     await page.locator(".admin-header select").selectOption(locale);
     await page.getByRole("button", { name: label, exact: true }).click();

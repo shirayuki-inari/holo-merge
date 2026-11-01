@@ -16,7 +16,7 @@ npm run dev
 打开终端显示的地址，默认 `http://localhost:5173`。开发服务器监听局域网，可用同一网络的手机访问终端输出的 Network 地址。
 
 ```sh
-npm test          # 成员数据、图片、等级规则及投放边界验证
+npm test          # 游戏规则、回放与排行榜、客户端请求、多语言、音频文件及成员数据（Node，无需浏览器）
 npm run build    # TypeScript 检查及生产构建，产物位于 dist/
 npm run preview  # 预览生产构建
 ```
@@ -171,13 +171,18 @@ python scripts/optimize-avatars.py   # 需要 cwebp（libwebp）
 先运行 `npm run dev`，然后使用本机 Chromium（或先运行 `npx playwright-core install chromium` 安装测试浏览器）：
 
 ```sh
-BROWSER_PATH=/path/to/chromium npm run test:browser
-BROWSER_PATH=/path/to/chromium npm run test:audio-browser  # BGM 播放、自动播放限制、开关持久化及后台恢复
-BROWSER_PATH=/path/to/chromium npm run test:character-audio # 全部 39 条录音解码播放及实际合成/最高等级回调
-BROWSER_PATH=/path/to/chromium npm run test:settings-browser # 编号选曲、语音静音、多语言及设置持久化
+BROWSER_PATH=/path/to/chromium npm run test:browser         # 渲染、暂停/后台、DPR 重绘、拖动取消、开局请求与预取
+BROWSER_PATH=/path/to/chromium npm run test:audio-browser   # BGM 自动播放限制、开关持久化及后台恢复
+BROWSER_PATH=/path/to/chromium npm run test:character-audio # 实际合成/最高等级回调播放对应录音
+BROWSER_PATH=/path/to/chromium npm run test:settings-browser # 三首 BGM 实际播放、语音静音、多语言及设置持久化
 ```
 
-可通过 `BASE_URL` 指定开发服务器地址。测试在真实浏览器中覆盖全部合成等级、碰撞连锁、最高级、满线宽限与恢复、结束、防连续误投、暂停、桌面键盘、移动触屏、弹窗以及 320–1440px 布局。截图保存到忽略目录 `.qa/`。玩法和旧音频测试直接导入开发模块，需使用开发服务器；设置 / 多语言测试同时支持开发和生产页面。
+可通过 `BASE_URL` 指定开发服务器地址。截图保存到忽略目录 `.qa/`，仅供人工查看，不参与断言。玩法和旧音频测试直接导入开发模块，需使用开发服务器；设置 / 多语言测试同时支持开发和生产页面（CI 只对解压后的发布包运行一次）。
+
+测试分工：
+
+- **Node（`npm test`）**：合成规则、警戒线宽限/倒计时/结束、投放限制、同种子确定性（`tests/simulation.test.ts`，直接驱动服务端回放使用的 `Simulation`）；排行榜回放校验与结算；开局请求顺序和种子预取（`tests/leaderboard-client.test.ts`）；MP3 帧结构、时长与录音非静音（`tests/media.test.ts`）；语音目录与覆盖率由数据推导，不写死数量。
+- **浏览器**：只保留必须依赖真实画布、动画帧、音频和页面交互的部分。所有脚本通过 `scripts/browser-helpers.mjs` 启动 Chromium（含 Termux 适配），界面文案取自 i18n 字典而不是写死的字符串，因此改文案不会破坏测试；脚本用 `tsx` 运行以便导入 TypeScript 字典。
 
 ## GitHub CI
 

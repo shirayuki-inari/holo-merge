@@ -1,17 +1,8 @@
 import assert from "node:assert/strict";
 import { mkdir } from "node:fs/promises";
-const android = process.platform === "android";
-if (android) Object.defineProperty(process, "platform", { value: "linux" });
-const { chromium } = await import("playwright-core");
-const browser = await chromium.launch({
-  executablePath:
-    process.env.BROWSER_PATH ||
-    (android
-      ? "/data/data/com.termux/files/usr/bin/chromium-browser"
-      : chromium.executablePath()),
-  args: ["--no-sandbox", "--disable-dev-shm-usage", "--disable-gpu"],
-});
-const base = process.env.BASE_URL || "http://127.0.0.1:5175",
+import { adminEn, adminJa, adminZh, baseUrl, launch, literal } from "./browser-helpers.mjs";
+const browser = await launch();
+const base = baseUrl("http://127.0.0.1:5175"),
   password =
     process.env.ADMIN_TEST_PASSWORD || "test-only-administrator-password";
 await mkdir(".qa", { recursive: true });
@@ -38,18 +29,18 @@ try {
   assert.equal(register.status(), 200);
   const id = (await register.json()).id;
   await page.goto(base + "/admin/", { waitUntil: "domcontentloaded" });
-  await page.getByRole("heading", { name: "管理员登录" }).waitFor();
+  await page.getByRole("heading", { name: adminZh("login") }).waitFor();
   assert.equal(
     (await page.request.get(base + "/api/admin/overview")).status(),
     401,
   );
-  await page.getByLabel("管理密码", { exact: true }).fill("incorrect");
-  await page.getByRole("button", { name: "登录", exact: true }).click();
-  await page.getByRole("alert").filter({ hasText: "管理密码不正确" }).waitFor();
-  await page.getByLabel("管理密码", { exact: true }).fill(password);
-  await page.getByRole("button", { name: "登录", exact: true }).click();
-  await page.getByRole("heading", { name: "每日数据" }).waitFor();
-  assert.match(await page.title(), /管理面板/);
+  await page.getByLabel(adminZh("password"), { exact: true }).fill("incorrect");
+  await page.getByRole("button", { name: adminZh("signIn"), exact: true }).click();
+  await page.getByRole("alert").filter({ hasText: adminZh("invalidPassword") }).waitFor();
+  await page.getByLabel(adminZh("password"), { exact: true }).fill(password);
+  await page.getByRole("button", { name: adminZh("signIn"), exact: true }).click();
+  await page.getByRole("heading", { name: adminZh("activity") }).waitFor();
+  assert.match(await page.title(), new RegExp(literal(adminZh("title"))));
   assert.equal(await page.locator("canvas,audio").count(), 0);
   assert.equal(media.length, 0);
   assert.ok(
@@ -58,30 +49,30 @@ try {
     ),
   );
   await page.screenshot({ path: ".qa/admin-overview.png", fullPage: true });
-  await page.getByRole("button", { name: "排行榜管理", exact: true }).click();
-  await page.getByLabel("范围", { exact: true }).selectOption("all");
+  await page.getByRole("button", { name: adminZh("rankings"), exact: true }).click();
+  await page.getByLabel(adminZh("filter"), { exact: true }).selectOption("all");
   await page.getByRole("searchbox").fill(id);
-  await page.getByRole("button", { name: "搜索", exact: true }).click();
+  await page.getByRole("button", { name: adminZh("searchButton"), exact: true }).click();
   await page
     .getByRole("row")
     .filter({ hasText: "Panel Browser" })
-    .getByRole("button", { name: "编辑", exact: true })
+    .getByRole("button", { name: adminZh("edit"), exact: true })
     .click();
   const dialog = page.getByRole("dialog");
-  await dialog.getByLabel("玩家名称", { exact: true }).fill("管理测试玩家");
-  await dialog.getByLabel("最高分", { exact: true }).fill("23456");
+  await dialog.getByLabel(adminZh("name"), { exact: true }).fill("管理测试玩家");
+  await dialog.getByLabel(adminZh("score"), { exact: true }).fill("23456");
   await dialog
-    .getByLabel("角色头像", { exact: true })
+    .getByLabel(adminZh("avatar"), { exact: true })
     .selectOption("nakiri-ayame");
   assert.equal(
     await dialog
-      .getByRole("button", { name: "保存修改", exact: true })
+      .getByRole("button", { name: adminZh("save"), exact: true })
       .isEnabled(),
     false,
   );
-  await dialog.getByLabel("修改原因", { exact: true }).fill("浏览器验证修改");
-  await dialog.getByRole("button", { name: "保存修改", exact: true }).click();
-  await page.getByRole("status").filter({ hasText: "修改已保存" }).waitFor();
+  await dialog.getByLabel(adminZh("reason"), { exact: true }).fill("浏览器验证修改");
+  await dialog.getByRole("button", { name: adminZh("save"), exact: true }).click();
+  await page.getByRole("status").filter({ hasText: adminZh("saved") }).waitFor();
   await page.getByRole("row").filter({ hasText: "管理测试玩家" }).waitFor();
   const board = await (
     await page.request.get(base + "/api/leaderboard")
@@ -97,9 +88,9 @@ try {
   );
   await page.screenshot({ path: ".qa/admin-rankings.png", fullPage: true });
   // Force a concurrent profile change through the original game API.
-  await page.getByRole("button", { name: "编辑", exact: true }).click();
-  await dialog.getByLabel("最高分", { exact: true }).fill("22000");
-  await dialog.getByLabel("修改原因", { exact: true }).fill("并发测试");
+  await page.getByRole("button", { name: adminZh("edit"), exact: true }).click();
+  await dialog.getByLabel(adminZh("score"), { exact: true }).fill("22000");
+  await dialog.getByLabel(adminZh("reason"), { exact: true }).fill("并发测试");
   assert.equal(
     (
       await page.request.patch(base + "/api/player", {
@@ -109,19 +100,19 @@ try {
     ).status(),
     200,
   );
-  await dialog.getByRole("button", { name: "保存修改", exact: true }).click();
-  await dialog.getByRole("alert").filter({ hasText: "已更新" }).waitFor();
+  await dialog.getByRole("button", { name: adminZh("save"), exact: true }).click();
+  await dialog.getByRole("alert").filter({ hasText: adminZh("conflict") }).waitFor();
   await dialog
-    .getByRole("button", { name: "取消", exact: true })
+    .getByRole("button", { name: adminZh("cancel"), exact: true })
     .last()
     .click();
-  await page.getByRole("button", { name: "刷新", exact: true }).click();
+  await page.getByRole("button", { name: adminZh("refresh"), exact: true }).click();
   await page.getByRole("row").filter({ hasText: "实时玩家" }).waitFor();
-  await page.getByRole("button", { name: "清除排名", exact: true }).click();
-  await dialog.getByLabel("修改原因", { exact: true }).fill("浏览器验证清除");
-  await dialog.getByRole("button", { name: "确认清除", exact: true }).click();
+  await page.getByRole("button", { name: adminZh("reset"), exact: true }).click();
+  await dialog.getByLabel(adminZh("reason"), { exact: true }).fill("浏览器验证清除");
+  await dialog.getByRole("button", { name: adminZh("confirmReset"), exact: true }).click();
   await page.getByRole("status").waitFor();
-  await page.getByRole("button", { name: "修改记录", exact: true }).click();
+  await page.getByRole("button", { name: adminZh("audit"), exact: true }).click();
   await page
     .getByRole("cell", { name: "浏览器验证修改", exact: true })
     .waitFor();
@@ -130,9 +121,9 @@ try {
     .waitFor();
   await page.screenshot({ path: ".qa/admin-audit.png", fullPage: true });
   for (const [locale, overview] of [
-    ["en", "Overview"],
-    ["ja", "稼働状況"],
-    ["zh-CN", "运行概览"],
+    ["en", adminEn("overview")],
+    ["ja", adminJa("overview")],
+    ["zh-CN", adminZh("overview")],
   ]) {
     await page.locator(".admin-header select").selectOption(locale);
     await page.getByRole("button", { name: overview, exact: true }).click();
@@ -155,9 +146,9 @@ try {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.screenshot({ path: ".qa/admin-mobile.png", fullPage: true });
   await page.reload({ waitUntil: "domcontentloaded" });
-  await page.getByRole("heading", { name: "每日数据" }).waitFor();
-  await page.getByRole("button", { name: "退出登录", exact: true }).click();
-  await page.getByRole("heading", { name: "管理员登录" }).waitFor();
+  await page.getByRole("heading", { name: adminZh("activity") }).waitFor();
+  await page.getByRole("button", { name: adminZh("logout"), exact: true }).click();
+  await page.getByRole("heading", { name: adminZh("login") }).waitFor();
   assert.equal(
     (await page.request.get(base + "/api/admin/audit")).status(),
     401,

@@ -1,23 +1,8 @@
 import assert from "node:assert/strict";
 import { mkdir } from "node:fs/promises";
-const android = process.platform === "android";
-if (android) Object.defineProperty(process, "platform", { value: "linux" });
-const { chromium } = await import("playwright-core");
-const browser = await chromium.launch({
-  executablePath:
-    process.env.BROWSER_PATH ||
-    (android
-      ? "/data/data/com.termux/files/usr/bin/chromium-browser"
-      : chromium.executablePath()),
-  args: [
-    "--no-sandbox",
-    "--disable-dev-shm-usage",
-    "--disable-gpu",
-    "--autoplay-policy=document-user-activation-required",
-    "--disable-features=PreloadMediaEngagementData,MediaEngagementBypassAutoplayPolicies",
-  ],
-});
-const base = process.env.BASE_URL || "http://localhost:5173";
+import { baseUrl, launch, zh } from "./browser-helpers.mjs";
+const browser = await launch(["--autoplay-policy=document-user-activation-required", "--disable-features=PreloadMediaEngagementData,MediaEngagementBypassAutoplayPolicies"]);
+const base = baseUrl("http://localhost:5173");
 await mkdir(".qa", { recursive: true });
 try {
   const page = await browser.newPage({
@@ -42,10 +27,10 @@ try {
   );
   // Open the panel programmatically to retain the blocked autoplay state.
   await page
-    .getByRole("button", { name: "设置", exact: true })
+    .getByRole("button", { name: zh("settings.title"), exact: true })
     .evaluate((el) => el.click());
   // Turning off must not count as the gesture that starts music.
-  await page.getByRole("switch", { name: "背景音乐", exact: true }).click();
+  await page.getByRole("switch", { name: zh("settings.bgm"), exact: true }).click();
   assert.equal(await audio.evaluate((el) => el.paused), true);
   assert.equal(await audio.evaluate((el) => el.currentTime), 0);
   await page.keyboard.press("Escape");
@@ -53,10 +38,10 @@ try {
   await canvas.click();
   assert.equal(await audio.evaluate((el) => el.paused), true);
   await page.reload({ waitUntil: "networkidle" });
-  await page.getByRole("button", { name: "设置", exact: true }).click();
+  await page.getByRole("button", { name: zh("settings.title"), exact: true }).click();
   assert.equal(
     await page
-      .getByRole("switch", { name: "背景音乐", exact: true })
+      .getByRole("switch", { name: zh("settings.bgm"), exact: true })
       .getAttribute("aria-checked"),
     "false",
   );
@@ -64,7 +49,7 @@ try {
   console.log(
     "PASS blocked autoplay, off gesture, off during gameplay, preference survives reload",
   );
-  await page.getByRole("switch", { name: "背景音乐", exact: true }).click();
+  await page.getByRole("switch", { name: zh("settings.bgm"), exact: true }).click();
   await page.waitForFunction(() => {
     const a = document.querySelector("audio");
     return !a.paused && a.currentTime > 0.15 && a.readyState >= 2;
@@ -72,22 +57,22 @@ try {
   const playingSource = await audio.getAttribute("src");
   assert.equal(await audio.evaluate((el) => el.volume), 0.35);
   await page.keyboard.press("Escape");
-  await page.getByRole("button", { name: "暂停游戏", exact: true }).click();
+  await page.getByRole("button", { name: zh("game.pause"), exact: true }).click();
   assert.equal(await audio.evaluate((el) => el.paused), true);
   const frozen = await audio.evaluate((el) => el.currentTime);
   await page.waitForTimeout(150);
   assert.equal(await audio.evaluate((el) => el.currentTime), frozen);
   await page
-    .getByRole("button", { name: "继续游戏", exact: true })
+    .getByRole("button", { name: zh("game.resume"), exact: true })
     .last()
     .click();
   await page.waitForFunction(() => !document.querySelector("audio").paused);
   assert.equal(await audio.getAttribute("src"), playingSource);
   await canvas.click();
-  await page.getByRole("button", { name: "重新开始", exact: true }).click();
+  await page.getByRole("button", { name: zh("game.restart"), exact: true }).click();
   await page
     .locator("dialog")
-    .getByRole("button", { name: "重新开始", exact: true })
+    .getByRole("button", { name: zh("game.restart"), exact: true })
     .click();
   assert.equal(
     await audio.getAttribute("src"),
@@ -111,8 +96,8 @@ try {
     document.dispatchEvent(new Event("visibilitychange"));
   });
   await page.waitForFunction(() => !document.querySelector("audio").paused);
-  await page.getByRole("button", { name: "设置", exact: true }).click();
-  await page.getByRole("switch", { name: "背景音乐", exact: true }).click();
+  await page.getByRole("button", { name: zh("settings.title"), exact: true }).click();
+  await page.getByRole("switch", { name: zh("settings.bgm"), exact: true }).click();
   await page.keyboard.press("Escape");
   await page.evaluate(() => {
     document.dispatchEvent(new Event("visibilitychange"));
@@ -122,37 +107,8 @@ try {
   console.log(
     "PASS actual playback, looping configuration, pause/resume, restart and visibility lifecycle",
   );
-  const media = await page.evaluate(async () => {
-    const { BGM_TRACKS } = await import("/src/audio/bgm.ts");
-    const decoded = [];
-    for (const source of BGM_TRACKS) {
-      const sample = new Audio(source);
-      sample.preload = "auto";
-      await new Promise((resolve, reject) => {
-        sample.addEventListener("canplay", resolve, { once: true });
-        sample.addEventListener(
-          "error",
-          () => reject(new Error("Cannot decode " + source)),
-          { once: true },
-        );
-      });
-      await sample.play();
-      await new Promise((resolve) => setTimeout(resolve, 100));
-      if (sample.paused || sample.currentTime === 0 || sample.error)
-        throw new Error("Playback failed: " + source);
-      decoded.push({ source, duration: sample.duration });
-      sample.pause();
-      sample.removeAttribute("src");
-      sample.load();
-    }
-    return decoded;
-  });
-  assert.equal(media.length, 3);
-  media.forEach((item) => assert.ok(item.duration > 60));
-  console.log(
-    "PASS all three MP3 files decoded and played:",
-    JSON.stringify(media),
-  );
+  // File validity and durations: tests/media.test.ts. Playing each numbered
+  // track through the settings UI: settings-browser-test.mjs.
   for (const width of [320, 390, 580, 768, 1280]) {
     await page.setViewportSize({ width, height: 900 });
     assert.equal(

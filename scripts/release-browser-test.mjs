@@ -1,29 +1,15 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
+import { baseUrl, launch, zh } from "./browser-helpers.mjs";
 const manifest = JSON.parse(
   await readFile("release/deployment-manifest.json", "utf8"),
 );
 const voices = JSON.parse(
   await readFile("src/audio/character-voices.json", "utf8"),
 );
-const android = process.platform === "android";
-if (android) Object.defineProperty(process, "platform", { value: "linux" });
-const { chromium } = await import("playwright-core");
-const browser = await chromium.launch({
-  executablePath:
-    process.env.BROWSER_PATH ||
-    (android
-      ? "/data/data/com.termux/files/usr/bin/chromium-browser"
-      : chromium.executablePath()),
-  args: [
-    "--no-sandbox",
-    "--disable-dev-shm-usage",
-    "--disable-gpu",
-    "--autoplay-policy=document-user-activation-required",
-  ],
-});
-const base = process.env.BASE_URL || "http://127.0.0.1:4173";
+const browser = await launch(["--autoplay-policy=document-user-activation-required"]);
+const base = baseUrl("http://127.0.0.1:4173");
 try {
   const page = await browser.newPage({
     locale: "zh-CN",
@@ -91,8 +77,8 @@ try {
       ),
     true,
   );
-  await page.getByRole("button", { name: "设置", exact: true }).click();
-  await page.getByRole("switch", { name: "背景音乐", exact: true }).click();
+  await page.getByRole("button", { name: zh("settings.title"), exact: true }).click();
+  await page.getByRole("switch", { name: zh("settings.bgm"), exact: true }).click();
   await page.keyboard.press("Escape");
   await page.locator("canvas").click();
   await page.waitForTimeout(500);

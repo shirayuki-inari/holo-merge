@@ -83,7 +83,7 @@ jobs:
           npm run test:browser
           npm run test:audio-browser
           npm run test:character-audio
-          npm run test:settings-browser
+          # test:settings-browser runs once, against the extracted release package below.
 
       - name: Node backend and leaderboard browser tests
         shell: bash

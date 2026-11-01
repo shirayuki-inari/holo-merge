@@ -1,16 +1,10 @@
 import assert from "node:assert/strict";
-const android = process.platform === "android";
-if (android) Object.defineProperty(process, "platform", { value: "linux" });
-const { chromium } = await import("playwright-core");
-const browser = await chromium.launch({
-  executablePath:
-    process.env.BROWSER_PATH ||
-    (android
-      ? "/data/data/com.termux/files/usr/bin/chromium-browser"
-      : chromium.executablePath()),
-  args: ["--no-sandbox", "--disable-dev-shm-usage", "--disable-gpu"],
-});
-const base = process.env.BASE_URL || "http://127.0.0.1:5173";
+import { baseUrl, launch, literal, zh } from "./browser-helpers.mjs";
+// "第 {rank} 名 · {score} 分" without the rank, e.g. " · 36 分".
+const scoreSuffix = (score) =>
+  zh("board.rank", { rank: "\0", score }).split("\0")[1];
+const browser = await launch();
+const base = baseUrl("http://127.0.0.1:5173");
 try {
   const page = await browser.newPage({
     locale: "zh-CN",
@@ -19,17 +13,22 @@ try {
   const errors = [];
   page.on("pageerror", (e) => errors.push(e.message));
   await page.goto(base, { waitUntil: "networkidle" });
-  await page.getByText("本局可提交排行榜", { exact: true }).waitFor();
-  await page.getByRole("button", { name: "排行榜", exact: true }).click();
-  await page.getByRole("button", { name: "修改资料", exact: true }).click();
-  await page.getByLabel("玩家名称").fill("星街玩家");
-  const avatars = page.getByRole("button", { name: /^选择头像：/ });
+  await page.getByText(zh("rank.ready"), { exact: true }).waitFor();
+  await page.getByRole("button", { name: zh("board.title"), exact: true }).click();
+  await page.getByRole("button", { name: zh("board.edit"), exact: true }).click();
+  await page.getByLabel(zh("board.name")).fill("星街玩家");
+  const avatars = page.getByRole("button", {
+    name: new RegExp("^" + literal(zh("board.chooseAvatar", { name: "" }))),
+  });
   assert.equal(await avatars.count(), 43);
   await page
-    .getByRole("button", { name: "选择头像：星街すいせい", exact: true })
+    .getByRole("button", {
+      name: zh("board.chooseAvatar", { name: "星街すいせい" }),
+      exact: true,
+    })
     .click();
-  await page.getByRole("button", { name: "保存资料", exact: true }).click();
-  await page.getByText("资料已保存。", { exact: true }).waitFor();
+  await page.getByRole("button", { name: zh("board.save"), exact: true }).click();
+  await page.getByText(zh("board.saved"), { exact: true }).waitFor();
   assert.equal(
     await page.locator(".player-summary strong").innerText(),
     "星街玩家",
@@ -49,34 +48,38 @@ try {
     await canvas.click();
     await page.waitForTimeout(700);
   }
-  await page.getByRole("button", { name: "排行榜", exact: true }).click();
+  await page.getByRole("button", { name: zh("board.title"), exact: true }).click();
   const score = await page.evaluate(() => window.__rankedEngine.state.score);
   assert.ok(score > 0);
   const snapshot = await page.evaluate(() => window.__rankedEngine.replay());
   await page
-    .getByRole("button", { name: "结算本局并提交成绩", exact: true })
+    .getByRole("button", { name: zh("board.submit"), exact: true })
     .click();
-  await page.getByText(new RegExp(`已提交 ${score} 分`)).waitFor();
+  await page.getByText(new RegExp(
+        [zh("score.improved", { score }), zh("score.kept", { score })]
+          .map(literal)
+          .join("|"),
+      ),).waitFor();
   assert.equal(
     await page
-      .getByRole("button", { name: "结算本局并提交成绩", exact: true })
+      .getByRole("button", { name: zh("board.submit"), exact: true })
       .count(),
     0,
   );
   await page.waitForFunction(
-    (score) =>
+    (suffix) =>
       document
         .querySelector(".player-summary small")
-        ?.textContent.includes(`${score} 分`),
-    score,
+        ?.textContent.includes(suffix),
+    scoreSuffix(score),
   );
   assert.match(
     await page.locator(".player-summary small").innerText(),
-    new RegExp(`${score} 分`),
+    new RegExp(literal(scoreSuffix(score))),
   );
   assert.equal(
     await page.locator(".rank-list .is-me .rank-name").innerText(),
-    "星街玩家我",
+    "星街玩家" + zh("board.me"),
   );
   await page.screenshot({ path: ".qa/leaderboard-mobile.png", fullPage: true });
   // Verify the browser and Node replays agree, including a longer recorded game.
@@ -119,11 +122,11 @@ try {
     );
   }
   await page.reload({ waitUntil: "networkidle" });
-  await page.getByRole("button", { name: "排行榜", exact: true }).click();
+  await page.getByRole("button", { name: zh("board.title"), exact: true }).click();
   await page.getByText("星街玩家", { exact: true }).first().waitFor();
   assert.match(
     await page.locator(".player-summary small").innerText(),
-    new RegExp(`${score} 分`),
+    new RegExp(literal(scoreSuffix(score))),
   );
   for (const width of [320, 390, 768, 1280]) {
     await page.setViewportSize({ width, height: 900 });

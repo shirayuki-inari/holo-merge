@@ -1,22 +1,8 @@
 import assert from "node:assert/strict";
 import { mkdir } from "node:fs/promises";
-const android = process.platform === "android";
-if (android) Object.defineProperty(process, "platform", { value: "linux" });
-const { chromium } = await import("playwright-core");
-const browser = await chromium.launch({
-  executablePath:
-    process.env.BROWSER_PATH ||
-    (android
-      ? "/data/data/com.termux/files/usr/bin/chromium-browser"
-      : chromium.executablePath()),
-  args: [
-    "--no-sandbox",
-    "--disable-dev-shm-usage",
-    "--disable-gpu",
-    "--autoplay-policy=document-user-activation-required",
-  ],
-});
-const base = process.env.BASE_URL || "http://localhost:5173";
+import { baseUrl, en, ja, launch, literal, zh } from "./browser-helpers.mjs";
+const browser = await launch(["--autoplay-policy=document-user-activation-required"]);
+const base = baseUrl("http://localhost:5173");
 await mkdir(".qa", { recursive: true });
 try {
   const page = await browser.newPage({
@@ -71,7 +57,7 @@ try {
   });
   await page.goto(base, { waitUntil: "networkidle" });
   await page
-    .getByText("本局为离线游戏，排行榜暂不可用", { exact: true })
+    .getByText(zh("rank.unavailable"), { exact: true })
     .waitFor();
   assert.equal(await page.locator(".header-actions button").count(), 3);
   for (let i = 0; i < 12; i++) {
@@ -86,7 +72,7 @@ try {
       ),
     ) > 0,
   );
-  await page.getByRole("button", { name: "设置", exact: true }).click();
+  await page.getByRole("button", { name: zh("settings.title"), exact: true }).click();
   await page.evaluate(() => {
     window.__originalCanvas = document.querySelector("canvas");
     window.__score = document.querySelector(".score-card strong").textContent;
@@ -97,11 +83,17 @@ try {
   const audio = page.locator("audio");
   for (const track of ["01", "02", "03"]) {
     await page
-      .getByRole("button", { name: `曲目 ${track}`, exact: true })
+      .getByRole("button", {
+        name: zh("settings.trackNumber", { number: track }),
+        exact: true,
+      })
       .click();
     assert.equal(
       await page
-        .getByRole("button", { name: `曲目 ${track}`, exact: true })
+        .getByRole("button", {
+        name: zh("settings.trackNumber", { number: track }),
+        exact: true,
+      })
         .getAttribute("aria-pressed"),
       "true",
     );
@@ -117,8 +109,11 @@ try {
     await page.locator("dialog").innerText(),
     /bgm_park|\.mp3/,
   );
-  await page.getByRole("switch", { name: "背景音乐", exact: true }).click();
-  await page.getByRole("button", { name: "曲目 02", exact: true }).click();
+  await page.getByRole("switch", { name: zh("settings.bgm"), exact: true }).click();
+  await page.getByRole("button", {
+    name: zh("settings.trackNumber", { number: "02" }),
+    exact: true,
+  }).click();
   assert.equal(
     await audio.evaluate((el) => el.paused),
     true,
@@ -126,17 +121,17 @@ try {
   );
   const source2 = await audio.getAttribute("src");
   assert.notEqual(source2, source3);
-  await page.getByRole("switch", { name: "角色语音", exact: true }).click();
+  await page.getByRole("switch", { name: zh("settings.voice"), exact: true }).click();
   assert.equal(
     await page
-      .getByRole("switch", { name: "角色语音", exact: true })
+      .getByRole("switch", { name: zh("settings.voice"), exact: true })
       .getAttribute("aria-checked"),
     "false",
   );
   for (const [lang, title, limit] of [
-    ["en", "Settings", "Limit"],
-    ["ja", "設定", "警戒線"],
-    ["zh-CN", "设置", "警戒线"],
+    ["en", en("settings.title"), en("game.limit")],
+    ["ja", ja("settings.title"), ja("game.limit")],
+    ["zh-CN", zh("settings.title"), zh("game.limit")],
   ]) {
     await page.locator("#game-language").selectOption(lang);
     assert.equal(await page.locator("html").getAttribute("lang"), lang);
@@ -184,27 +179,27 @@ try {
   await page.screenshot({ path: ".qa/settings-en.png", fullPage: true });
   await page.keyboard.press("Escape");
   await page
-    .getByRole("button", { name: "View instructions", exact: true })
+    .getByRole("button", { name: en("help.open"), exact: true })
     .click();
   assert.match(await page.locator("dialog").innerText(), /Generation 0/);
   await page.keyboard.press("Escape");
-  await page.getByRole("button", { name: "Merge guide", exact: true }).click();
+  await page.getByRole("button", { name: en("lineup.guide"), exact: true }).click();
   assert.match(await page.locator("dialog").innerText(), /Generation 0/);
   assert.doesNotMatch(
     await page.locator("dialog").innerText(),
     /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]/u,
   );
   await page.keyboard.press("Escape");
-  await page.getByRole("button", { name: "Leaderboard", exact: true }).click();
-  await page.getByRole("button", { name: "Edit profile", exact: true }).click();
-  await page.getByLabel("Player name", { exact: true }).fill("Invalid Profile");
+  await page.getByRole("button", { name: en("board.title"), exact: true }).click();
+  await page.getByRole("button", { name: en("board.edit"), exact: true }).click();
+  await page.getByLabel(en("board.name"), { exact: true }).fill("Invalid Profile");
   await page
     .getByRole("button", {
       name: "Choose avatar: Shirakami Fubuki",
       exact: true,
     })
     .click();
-  await page.getByRole("button", { name: "Save profile", exact: true }).click();
+  await page.getByRole("button", { name: en("board.save"), exact: true }).click();
   await page.getByRole("alert").waitFor();
   assert.match(await page.getByRole("alert").innerText(), /Names must be/);
   assert.doesNotMatch(
@@ -213,7 +208,7 @@ try {
   );
   await page.screenshot({ path: ".qa/leaderboard-en.png", fullPage: true });
   await page.keyboard.press("Escape");
-  await page.getByRole("button", { name: "Settings", exact: true }).click();
+  await page.getByRole("button", { name: en("settings.title"), exact: true }).click();
   await page.locator("#game-language").selectOption("ja");
   await page.screenshot({ path: ".qa/settings-ja.png", fullPage: true });
   const voiceRequests = [];
@@ -223,31 +218,33 @@ try {
   });
   await page.reload({ waitUntil: "networkidle" });
   assert.equal(await page.locator("html").getAttribute("lang"), "ja");
-  await page.getByRole("button", { name: "設定", exact: true }).click();
+  await page.getByRole("button", { name: ja("settings.title"), exact: true }).click();
   assert.equal(await audio.getAttribute("src"), source2);
   assert.equal(await audio.evaluate((el) => el.paused), true);
   assert.equal(
     await page
-      .getByRole("switch", { name: "キャラクターボイス", exact: true })
+      .getByRole("switch", { name: ja("settings.voice"), exact: true })
       .getAttribute("aria-checked"),
     "false",
   );
   assert.deepEqual(voiceRequests, [], "muted voices are not fetched on reload");
   await page.keyboard.press("Escape");
-  await page.getByRole("button", { name: "ランキング", exact: true }).click();
+  await page.getByRole("button", { name: ja("board.title"), exact: true }).click();
   await page
-    .getByRole("button", { name: "プロフィールを編集", exact: true })
+    .getByRole("button", { name: ja("board.edit"), exact: true })
     .click();
   assert.equal(
-    await page.getByRole("button", { name: /^アバターを選択：/ }).count(),
+    await page.getByRole("button", {
+      name: new RegExp("^" + literal(ja("board.chooseAvatar", { name: "" }))),
+    }).count(),
     43,
   );
   await page.keyboard.press("Escape");
-  await page.getByRole("button", { name: "遊び方を見る", exact: true }).click();
-  assert.match(await page.locator("dialog").innerText(), /0期生/);
+  await page.getByRole("button", { name: ja("help.open"), exact: true }).click();
+  assert.match(await page.locator("dialog").innerText(), new RegExp(literal(ja("group.gen-0"))));
   await page.keyboard.press("Escape");
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.getByRole("button", { name: "設定", exact: true }).click();
+  await page.getByRole("button", { name: ja("settings.title"), exact: true }).click();
   await page.screenshot({ path: ".qa/settings-mobile.png", fullPage: true });
   const auto = await browser.newPage({ locale: "en-US" });
   await auto.route("**/api/**", (route) =>
@@ -259,7 +256,7 @@ try {
   });
   await auto.goto(base, { waitUntil: "networkidle" });
   assert.equal(await auto.locator("html").getAttribute("lang"), "en");
-  await auto.getByRole("button", { name: "Settings", exact: true }).click();
+  await auto.getByRole("button", { name: en("settings.title"), exact: true }).click();
   await auto.locator("#game-language").selectOption("ja");
   await auto.reload({ waitUntil: "networkidle" });
   assert.equal(

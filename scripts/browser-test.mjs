@@ -1,18 +1,8 @@
 import assert from "node:assert/strict";
 import { mkdir } from "node:fs/promises";
-const android = process.platform === "android";
-if (android) Object.defineProperty(process, "platform", { value: "linux" });
-const { chromium } = await import("playwright-core");
-const browser = await chromium.launch({
-  executablePath:
-    process.env.BROWSER_PATH ||
-    (android
-      ? "/data/data/com.termux/files/usr/bin/chromium-browser"
-      : chromium.executablePath()),
-  headless: true,
-  args: ["--no-sandbox", "--disable-dev-shm-usage", "--disable-gpu"],
-});
-const base = process.env.BASE_URL || "http://localhost:5173";
+import { baseUrl, launch, zh } from "./browser-helpers.mjs";
+const browser = await launch();
+const base = baseUrl("http://localhost:5173");
 await mkdir(".qa", { recursive: true });
 const errors = [];
 try {
@@ -27,7 +17,7 @@ try {
   await page.goto(base, { waitUntil: "networkidle" });
   await page.locator("canvas").waitFor();
   await page.screenshot({ path: ".qa/desktop.png", fullPage: true });
-  assert.equal(await page.title(), "holo merge! — hololive 合成游戏");
+  assert.equal(await page.title(), zh("app.title"));
   assert.equal(await page.locator(".evolution-item").count(), 11);
   assert.deepEqual(
     await page.evaluate(() =>
@@ -42,239 +32,211 @@ try {
   await page.keyboard.press("ArrowLeft");
   await page.keyboard.press("Space");
   await page.waitForTimeout(600);
-  await page.getByRole("button", { name: "暂停游戏", exact: true }).click();
+  await page.getByRole("button", { name: zh("game.pause"), exact: true }).click();
   await page
-    .getByRole("button", { name: "继续游戏", exact: true })
+    .getByRole("button", { name: zh("game.resume"), exact: true })
     .last()
     .click();
-  await page.getByRole("button", { name: "设置", exact: true }).click();
-  await page.getByRole("switch", { name: "背景音乐", exact: true }).click();
+  await page.getByRole("button", { name: zh("settings.title"), exact: true }).click();
+  await page.getByRole("switch", { name: zh("settings.bgm"), exact: true }).click();
   assert.equal(
     await page
-      .getByRole("switch", { name: "背景音乐", exact: true })
+      .getByRole("switch", { name: zh("settings.bgm"), exact: true })
       .getAttribute("aria-checked"),
     "false",
   );
   await page.keyboard.press("Escape");
-  await page.getByRole("button", { name: "查看玩法说明" }).click();
+  await page.getByRole("button", { name: zh("help.open") }).click();
   assert.equal(await page.locator("dialog[open]").count(), 1);
   await page.keyboard.press("Escape");
   assert.equal(await page.locator("dialog[open]").count(), 0);
-  await page.getByRole("button", { name: "重新开始", exact: true }).click();
-  assert.match(await page.locator("dialog").innerText(), /重新开始会清空棋盘/);
-  await page.getByRole("button", { name: "继续本局", exact: true }).click();
-  await page.getByRole("button", { name: "重新开始", exact: true }).click();
+  await page.getByRole("button", { name: zh("game.restart"), exact: true }).click();
+  assert.ok(
+    (await page.locator("dialog").innerText()).includes(zh("restart.title")),
+  );
+  await page.getByRole("button", { name: zh("restart.continue"), exact: true }).click();
+  await page.getByRole("button", { name: zh("game.restart"), exact: true }).click();
   await page
     .locator("dialog")
-    .getByRole("button", { name: "重新开始", exact: true })
+    .getByRole("button", { name: zh("game.restart"), exact: true })
     .click();
   assert.equal(await page.locator(".score-card strong").innerText(), "0");
   console.log(
     "PASS desktop images, keyboard drop, pause/resume, BGM toggle, modal and confirmed restart",
   );
-  // Fixture tests use the real production physics class and a fixed clock for deterministic collision coverage.
-  const physics = await page.evaluate(async () => {
-    const { HoloEngine } = await import("/src/game/engine.ts");
-    const { createLineup, RADII, mergePoints } = await import(
-      "/src/game/model.ts"
-    );
-    const matterURL = performance
-      .getEntriesByType("resource")
-      .find((e) => e.name.includes("/matter-js.js")).name;
-    const { default: Matter } = await import(matterURL);
-    const report = [];
-    function fixture() {
-      const c = document.createElement("canvas");
-      document.body.append(c);
-      let ended = 0,
-        won = 0;
-      const game = new HoloEngine(c, {
-        lineup: createLineup(() => 0),
-        onChange: () => {},
-        onMerge: () => {},
-        onEnd: () => ended++,
-        onWin: () => won++,
-      });
-      game.setPaused(true);
-      return {
-        game,
-        c,
-        end: () => ended,
-        win: () => won,
-        dispose() {
-          game.destroy();
-          c.remove();
-        },
-      };
-    }
-    function step(g, n) {
-      for (let i = 0; i < n; i++) g.step(1000 / 120);
-    }
-    function check(v, msg) {
-      if (!v) throw new Error(msg);
-      report.push(msg);
-    }
-    for (let level = 0; level < 10; level++) {
-      const f = fixture(),
-        r = RADII[level];
-      f.game.addOrb(level, 220 - r * 0.9, 560 - r);
-      f.game.addOrb(level, 220 + r * 0.9, 560 - r);
-      step(f.game, 30);
-      check(
-        f.game.orbs.size === 1 &&
-          f.game.state.highest === level + 1 &&
-          f.game.state.score === mergePoints(level + 1),
-        "merge tier " + level + " → " + (level + 1),
-      );
-      if (level === 9)
-        check(f.win() === 1, "maximum tier triggers win exactly once");
-      f.dispose();
-    }
-    {
-      const f = fixture();
-      f.game.addOrb(10, 115, 450);
-      f.game.addOrb(10, 315, 450);
-      step(f.game, 60);
-      check(
-        f.game.orbs.size === 2 && f.game.state.score === 0,
-        "maximum tier cannot overflow the lineup",
-      );
-      f.dispose();
-    }
-    {
-      const f = fixture();
-      f.game.addOrb(0, 200, 530);
-      f.game.addOrb(1, 230, 530);
-      step(f.game, 120);
-      check(
-        f.game.orbs.size === 2 && f.game.state.score === 0,
-        "different members never merge",
-      );
-      f.dispose();
-    }
-    {
-      const f = fixture();
-      for (const x of [190, 220, 250]) f.game.addOrb(0, x, 530);
-      step(f.game, 60);
-      check(
-        f.game.orbs.size === 2 && f.game.state.score === 4,
-        "simultaneous three-way contact consumes each orb once",
-      );
-      f.dispose();
-    }
-    {
-      const f = fixture();
-      for (const x of [202, 214, 226, 238]) f.game.addOrb(0, x, 530);
-      step(f.game, 240);
-      check(
-        f.game.orbs.size === 1 &&
-          f.game.state.highest === 2 &&
-          f.game.state.score === 16,
-        "four-orb collision chains through two generations",
-      );
-      f.dispose();
-    }
-    {
-      const f = fixture();
-      const b = f.game.addOrb(0, 220, 80);
-      Matter.Sleeping.set(b, true);
-      step(f.game, 180);
-      check(
-        !f.game.state.danger && !f.game.state.over,
-        "new drops have a 1.6 second danger grace period",
-      );
-      step(f.game, 50);
-      check(
-        f.game.state.danger && !f.game.state.over,
-        "danger warns before game over",
-      );
-      Matter.Body.setPosition(b, { x: 220, y: 400 });
-      step(f.game, 5);
-      check(
-        !f.game.state.danger && !f.game.state.over,
-        "clearing the limit line resets danger",
-      );
-      Matter.Body.setPosition(b, { x: 220, y: 80 });
-      Matter.Sleeping.set(b, true);
-      step(f.game, 280);
-      check(
-        f.game.state.over && f.end() === 1,
-        "sustained overflow ends the game",
-      );
-      check(!f.game.drop(), "game over blocks further drops");
-      f.dispose();
-    }
-    {
-      const f = fixture();
-      f.game.state.current = 0;
-      f.game.setPaused(false);
-      f.game.setAim(-1000);
-      check(f.game.drop(), "first drop accepted");
-      check(!f.game.drop(), "rapid duplicate drop is throttled");
-      const orb = [...f.game.orbs.values()][0];
-      check(orb.body.position.x - RADII[0] > 6, "drop clamped inside walls");
-      f.game.setPaused(true);
-      const before = orb.body.position.y;
-      f.game.tick(performance.now() + 1000);
-      check(
-        orb.body.position.y === before && !f.game.drop(),
-        "pause stops both time and input",
-      );
-      f.dispose();
-    }
-    {
-      const f = fixture();
-      f.game.addOrb(0, 220, 100);
-      f.game.setPaused(false);
-      await new Promise((r) => setTimeout(r, 80));
-      Object.defineProperty(document, "hidden", {
-        configurable: true,
-        value: true,
-      });
-      document.dispatchEvent(new Event("visibilitychange"));
-      const t = f.game.time;
-      await new Promise((r) => setTimeout(r, 100));
-      check(
-        f.game.time === t && f.game.frame === 0,
-        "background visibility stops time and animation frames",
-      );
-      Object.defineProperty(document, "hidden", {
-        configurable: true,
-        value: false,
-      });
-      document.dispatchEvent(new Event("visibilitychange"));
-      await new Promise((r) => setTimeout(r, 80));
-      check(f.game.time > t, "foreground resumes without a time jump");
-      delete document.hidden;
-      f.dispose();
-    }
-    {
-      const f = fixture();
-      for (let row = 0; row < 9; row++)
-        for (let col = 0; col < 8; col++)
-          f.game.addOrb((row + col) % 3, 30 + col * 54, 180 + row * 40);
-      const before = f.game.orbs.size;
-      const start = performance.now();
-      for (let i = 0; i < 240; i++) {
-        step(f.game, 2);
-        f.game.draw();
+  // Game rules (merging, limit line, drops, determinism) are tested in Node by
+  // tests/simulation.test.ts. These cases need a real canvas and animation frames.
+  const engineReport = await page.evaluate(
+    async (labels) => {
+      const { HoloEngine } = await import("/src/game/engine.ts");
+      const { createLineup, RADII } = await import("/src/game/model.ts");
+      const report = [];
+      const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+      function fixture() {
+        const c = document.createElement("canvas");
+        document.body.append(c);
+        const game = new HoloEngine(c, {
+          lineup: createLineup(() => 0),
+          labels,
+          onChange: () => {},
+          onMerge: () => {},
+          onEnd: () => {},
+          onWin: () => {},
+        });
+        game.setPaused(true);
+        // Count this canvas's draws and labels only.
+        const ctx = c.getContext("2d");
+        const spy = { draws: 0, text: [] };
+        const drawImage = ctx.drawImage.bind(ctx);
+        ctx.drawImage = (...a) => (spy.draws++, drawImage(...a));
+        const fillText = ctx.fillText.bind(ctx);
+        ctx.fillText = (v, ...a) => (spy.text.push(String(v)), fillText(v, ...a));
+        return {
+          game,
+          c,
+          ctx,
+          spy,
+          dispose() {
+            game.destroy();
+            c.remove();
+          },
+        };
       }
-      const ms = (performance.now() - start) / 240;
-      check(
-        ms < 16.67,
-        "dense board throughput: " +
-          before +
-          " initial orbs, " +
-          f.game.orbs.size +
-          " final, " +
-          ms.toFixed(2) +
-          " ms per physics + render frame (60 FPS budget: 16.67 ms)",
-      );
-      f.dispose();
-    }
-    return report;
-  });
-  physics.forEach((m) => console.log("PASS " + m));
+      const step = (g, n) => {
+        for (let i = 0; i < n; i++) g.step(1000 / 120);
+      };
+      function check(v, msg) {
+        if (!v) throw new Error(msg);
+        report.push(msg);
+      }
+      {
+        const f = fixture();
+        f.game.state.current = 0;
+        f.game.setPaused(false);
+        check(f.game.drop(), "unpaused board accepts a drop");
+        const orb = [...f.game.orbs.values()][0];
+        f.game.setPaused(true);
+        const before = orb.body.position.y;
+        f.game.tick(performance.now() + 1000);
+        check(
+          orb.body.position.y === before && !f.game.drop(),
+          "pause stops both time and input",
+        );
+        f.dispose();
+      }
+      {
+        const f = fixture();
+        f.game.addOrb(0, 220, 100);
+        f.game.setPaused(false);
+        await wait(80);
+        Object.defineProperty(document, "hidden", {
+          configurable: true,
+          value: true,
+        });
+        document.dispatchEvent(new Event("visibilitychange"));
+        const t = f.game.time;
+        await wait(100);
+        check(
+          f.game.time === t && f.game.frame === 0,
+          "background visibility stops time and animation frames",
+        );
+        Object.defineProperty(document, "hidden", {
+          configurable: true,
+          value: false,
+        });
+        document.dispatchEvent(new Event("visibilitychange"));
+        await wait(80);
+        check(f.game.time > t, "foreground resumes without a time jump");
+        delete document.hidden;
+        f.dispose();
+      }
+      {
+        const f = fixture();
+        f.game.setPaused(false);
+        await wait(300);
+        const before = f.spy.draws;
+        await wait(500);
+        check(
+          f.spy.draws === before && f.game.frame !== 0,
+          "a still board keeps stepping physics but skips identical frames",
+        );
+        f.game.setAim(100);
+        await wait(60);
+        check(f.spy.draws > before, "moving the aim redraws");
+        f.dispose();
+      }
+      {
+        // A paused board stays painted when the device pixel ratio changes
+        // (zoom fires resize; rebuilding the bitmap clears it).
+        const f = fixture();
+        f.game.addOrb(3, 220, 400);
+        f.game.setPaused(true);
+        const width = f.c.width;
+        Object.defineProperty(window, "devicePixelRatio", {
+          configurable: true,
+          value: width === 440 ? 2 : 1,
+        });
+        dispatchEvent(new Event("resize"));
+        const resized = f.c.width;
+        const [r, g, b] = f.ctx.getImageData(
+          resized / 2,
+          resized * 0.3,
+          1,
+          1,
+        ).data;
+        delete window.devicePixelRatio;
+        dispatchEvent(new Event("resize"));
+        check(
+          resized !== width && r + g + b > 600,
+          `paused board repaints after a DPR change (${width} → ${resized} px)`,
+        );
+        f.dispose();
+      }
+      {
+        const f = fixture();
+        const held = f.game.addOrb(0, 220, 80);
+        held.isStatic = true;
+        step(f.game, 300);
+        f.spy.text.length = 0;
+        f.game.draw();
+        check(
+          f.spy.text.some((t) =>
+            new RegExp(`^${labels.danger} \\d\\.\\ds$`).test(t),
+          ),
+          "the limit line shows the remaining seconds: " +
+            f.spy.text.find((t) => t.startsWith(labels.danger)),
+        );
+        f.dispose();
+      }
+      {
+        const f = fixture();
+        for (let row = 0; row < 9; row++)
+          for (let col = 0; col < 8; col++)
+            f.game.addOrb((row + col) % 3, 30 + col * 54, 180 + row * 40);
+        const before = f.game.orbs.size;
+        const start = performance.now();
+        for (let i = 0; i < 240; i++) {
+          step(f.game, 2);
+          f.game.draw();
+        }
+        const ms = (performance.now() - start) / 240;
+        check(
+          ms < 16.67 && RADII.length === 11,
+          "dense board throughput: " +
+            before +
+            " initial orbs, " +
+            f.game.orbs.size +
+            " final, " +
+            ms.toFixed(2) +
+            " ms per physics + render frame (60 FPS budget: 16.67 ms)",
+        );
+        f.dispose();
+      }
+      return report;
+    },
+    { limit: zh("game.limit"), danger: zh("game.danger") },
+  );
+  engineReport.forEach((m) => console.log("PASS " + m));
   const record = await browser.newPage({
     locale: "zh-CN",
     viewport: { width: 1100, height: 900 },
@@ -345,18 +307,100 @@ try {
     bounds.y + bounds.height * 0.45,
   );
   await mobile.waitForTimeout(500);
-  await mobile.getByRole("button", { name: "重新开始", exact: true }).click();
-  assert.match(
-    await mobile.locator("dialog").innerText(),
-    /重新开始会清空棋盘/,
+  await mobile.getByRole("button", { name: zh("game.restart"), exact: true }).click();
+  assert.ok(
+    (await mobile.locator("dialog").innerText()).includes(zh("restart.title")),
   );
   await mobile
     .locator("dialog")
-    .getByRole("button", { name: "继续本局" })
+    .getByRole("button", { name: zh("restart.continue") })
     .click();
   await mobile.locator("canvas").scrollIntoViewIfNeeded();
   await mobile.screenshot({ path: ".qa/mobile-playing.png", fullPage: true });
   console.log("PASS mobile touch drop and modal");
+  // A drag that moves far vertically cancels the drop and says so while armed.
+  await mobile.getByRole("button", { name: zh("game.restart"), exact: true }).click();
+  await mobile
+    .locator("dialog")
+    .getByRole("button", { name: zh("game.restart"), exact: true })
+    .click();
+  const welcome = mobile.locator(".empty-welcome");
+  await welcome.waitFor();
+  const touch = await mobile.context().newCDPSession(mobile);
+  const pad = await mobile.locator("canvas").boundingBox();
+  const finger = (type, y) =>
+    touch.send("Input.dispatchTouchEvent", {
+      type,
+      touchPoints:
+        type === "touchEnd" ? [] : [{ x: pad.x + pad.width / 2, y: pad.y + y }],
+    });
+  await finger("touchStart", pad.height * 0.7);
+  await finger("touchMove", pad.height * 0.3);
+  await mobile
+    .getByRole("status")
+    .filter({ hasText: zh("game.dropCancel") })
+    .waitFor();
+  await finger("touchEnd");
+  await mobile.waitForTimeout(200);
+  assert.equal(await mobile.locator(".drop-cancel").count(), 0);
+  assert.ok(await welcome.isVisible(), "cancelled drag must not drop");
+  console.log("PASS touch drag cancel hint and cancelled drop");
+  // Ranked rounds: registered players start with one request, and the next
+  // seed is fetched while the restart dialog is open so "restart" is instant.
+  const ranked = await browser.newPage({
+    locale: "zh-CN",
+    viewport: { width: 1280, height: 900 },
+  });
+  ranked.on("pageerror", (e) => errors.push(e.message));
+  const calls = [];
+  let runs = 0;
+  await ranked.route("**/api/**", (route) => {
+    const request = route.request();
+    const path = new URL(request.url()).pathname;
+    calls.push(`${request.method()} ${path}`);
+    const json = (body) =>
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(body),
+      });
+    if (path === "/api/leaderboard")
+      return json({
+        entries: [],
+        me: { id: "fixture", name: "Fixture", avatar: "azki", score: 0, rank: null },
+      });
+    if (path === "/api/runs")
+      return json({
+        id: `run-${++runs}`,
+        seed: runs,
+        version: 1,
+        expires: Date.now() + 6 * 3_600_000,
+      });
+    return route.fulfill({ status: 404, contentType: "application/json", body: "{}" });
+  });
+  const rankReady = ranked.getByText(zh("rank.ready"), { exact: true });
+  await ranked.goto(base, { waitUntil: "networkidle" });
+  await rankReady.waitFor();
+  assert.deepEqual(calls, ["GET /api/leaderboard", "POST /api/runs"]);
+  calls.length = 0;
+  await ranked.reload({ waitUntil: "networkidle" });
+  await rankReady.waitFor();
+  assert.deepEqual(calls, ["POST /api/runs"], "registered: no leaderboard fetch");
+  calls.length = 0;
+  await ranked.locator("canvas").click();
+  await ranked.getByRole("button", { name: zh("game.restart"), exact: true }).click();
+  await ranked.waitForTimeout(300);
+  assert.deepEqual(calls, ["POST /api/runs"], "next seed prefetched");
+  calls.length = 0;
+  await ranked
+    .locator("dialog")
+    .getByRole("button", { name: zh("game.restart"), exact: true })
+    .click();
+  await ranked.locator(".empty-welcome").waitFor({ timeout: 1000 });
+  await rankReady.waitFor({ timeout: 1000 });
+  assert.deepEqual(calls, [], "restart uses the prefetched seed");
+  await ranked.close();
+  console.log("PASS ranked start uses one request; restart reuses the prefetched seed");
   assert.deepEqual(errors, []);
   console.log("PASS zero browser runtime errors");
 } finally {

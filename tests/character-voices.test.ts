@@ -10,15 +10,21 @@ import { groups } from "../src/game/model.ts";
 import coverage from "../assets/character-voices/coverage.json";
 import choices from "../assets/character-voices/choices.json";
 const events = ["drop", "merge", "win"] as const;
-test("only 34 merge and 5 final-tier win recordings are shipped, with no unused assets", () => {
-  assert.equal(Object.keys(CHARACTER_VOICES).length, 34);
-  assert.equal(Object.keys(CHARACTER_EFFECTS).length, 34);
+// Counts are derived from the catalog, so adding a recording only needs the importer.
+test("voiced members ship one merge clip, final-tier members also a win clip, with no unused assets", () => {
+  assert.deepEqual(
+    Object.keys(CHARACTER_EFFECTS).sort(),
+    Object.keys(CHARACTER_VOICES).sort(),
+  );
   const members = new Map(
     groups
       .flatMap((group) => group.members)
       .map((member) => [member.id, member]),
   );
   const finalIds = new Set(groups.at(-1)!.members.map((member) => member.id));
+  // Reaching the top tier always plays a celebration, whoever is in the lineup.
+  for (const id of finalIds)
+    assert.ok(CHARACTER_VOICES[id]?.win, `${id}: final-tier win clip`);
   const expectedWav: string[] = [];
   const expectedMp3: string[] = [];
   let count = 0;
@@ -62,7 +68,7 @@ test("only 34 merge and 5 final-tier win recordings are shipped, with no unused 
       assert.equal(CHARACTER_EFFECTS[id]?.[event], clip.src);
     }
   }
-  assert.equal(count, 39);
+  assert.equal(count, Object.keys(CHARACTER_VOICES).length + finalIds.size);
   for (const [root, expected] of [
     ["assets/character-voices/wav", expectedWav],
     ["public/audio/characters", expectedMp3],
@@ -73,7 +79,7 @@ test("only 34 merge and 5 final-tier win recordings are shipped, with no unused 
     assert.deepEqual(actual.sort(), expected.sort());
   }
 });
-test("coverage is derived from all 43 unique game members, including the 9 missing members", () => {
+test("coverage report matches the catalog and the member list", () => {
   const members = new Map(
     groups
       .flatMap((group) => group.members)
@@ -84,10 +90,14 @@ test("coverage is derived from all 43 unique game members, including the 9 missi
   );
   assert.equal(coverage.totalTalents, members.size);
   assert.equal(coverage.coveredTalents, Object.keys(CHARACTER_VOICES).length);
-  assert.equal(coverage.selectedClips, 39);
+  const clips = { merge: 0, win: 0 };
+  for (const role of Object.values(CHARACTER_VOICES)) {
+    if (role.merge) clips.merge++;
+    if (role.win) clips.win++;
+  }
+  assert.equal(coverage.selectedClips, clips.merge + clips.win);
   assert.deepEqual(coverage.events, ["merge", "win"]);
-  assert.deepEqual(coverage.eventClips, { merge: 34, win: 5 });
-  assert.equal(coverage.missing.length, 9);
+  assert.deepEqual(coverage.eventClips, clips);
   assert.deepEqual(
     coverage.missing.map((m) => m.id),
     missing.map((m) => m.id),
