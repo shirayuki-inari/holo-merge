@@ -22,6 +22,7 @@ import {
   Sparkles,
   Trophy,
   Settings,
+  TriangleAlert,
   X,
 } from "lucide-react";
 import { HoloEngine, type GameState } from "./game/engine";
@@ -35,6 +36,7 @@ import {
   submitScore,
   LeaderboardError,
   leaderboardErrorText,
+  prefetchRankedRun,
 } from "./leaderboard-client";
 import { useI18n } from "./i18n";
 import SettingsPanel from "./Settings";
@@ -169,6 +171,7 @@ export default function App() {
   const [game, setGame] = useState<GameState>(initial);
   const [mergeNotice, setMergeNotice] = useState<{
     level: number;
+    combo: number;
     stamp: number;
   } | null>(null);
   const [best, setBest] = useState(storedBest),
@@ -192,6 +195,8 @@ export default function App() {
   >(null);
   const dragging = useRef(false),
     pointerStart = useRef({ x: 0, y: 0 });
+  // Touch drags that move far vertically cancel the drop; say so while armed.
+  const [dropCancel, setDropCancel] = useState(false);
   useEffect(() => {
     const player = new CharacterEffectsPlayer();
     player.setEnabled(voicesInitial.current);
@@ -226,7 +231,11 @@ export default function App() {
       },
       onMerge: (level) => {
         characterEffects.current?.play("merge", lineup[level].id);
-        setMergeNotice({ level, stamp: Date.now() });
+        setMergeNotice({
+          level,
+          combo: instance.state.combo,
+          stamp: Date.now(),
+        });
       },
       onEnd: () => setModal("over"),
       onWin: () => {
@@ -250,6 +259,10 @@ export default function App() {
   useEffect(() => {
     engine.current?.setPaused(paused || modal !== null);
   }, [paused, modal, lineup, ranked.ready]);
+  // Fetch the next round's seed while the result is on screen, so "play again" is instant.
+  useEffect(() => {
+    if (game.over || modal === "restart") prefetchRankedRun();
+  }, [game.over, modal]);
   useEffect(() => {
     if (!mergeNotice) return;
     const timeout = window.setTimeout(() => setMergeNotice(null), 1800);
@@ -313,6 +326,13 @@ export default function App() {
     // Reserved for future drop recordings; the current catalog has no drop clips.
     if (instance.drop())
       characterEffects.current?.play("drop", lineup[level].id);
+  }
+  function isCancelGesture(clientY: number) {
+    return Math.abs(clientY - pointerStart.current.y) > 100;
+  }
+  function setCancelArmed(value: boolean) {
+    engine.current?.setAimCancelled(value);
+    setDropCancel(value);
   }
   function aim(clientX: number) {
     const rect = canvas.current!.getBoundingClientRect();
@@ -394,7 +414,7 @@ export default function App() {
                 <Sparkles size={12} />
                 {t("game.score")}
               </span>
-              <strong aria-live="polite">{number(game.score)}</strong>
+              <strong>{number(game.score)}</strong>
             </div>
             <div className="best-card">
               <span>
@@ -439,20 +459,21 @@ export default function App() {
               onPointerMove={(e) => {
                 if (e.pointerType === "mouse" || dragging.current)
                   aim(e.clientX);
+                if (dragging.current && e.pointerType !== "mouse")
+                  setCancelArmed(isCancelGesture(e.clientY));
               }}
               onPointerUp={(e) => {
                 if (!dragging.current) return;
                 dragging.current = false;
-                if (
-                  e.pointerType !== "mouse" &&
-                  Math.abs(e.clientY - pointerStart.current.y) > 100
-                )
+                setCancelArmed(false);
+                if (e.pointerType !== "mouse" && isCancelGesture(e.clientY))
                   return;
                 aim(e.clientX);
                 drop();
               }}
               onPointerCancel={() => {
                 dragging.current = false;
+                setCancelArmed(false);
               }}
               onKeyDown={(e) => {
                 if (
@@ -489,14 +510,9 @@ export default function App() {
                 </span>
               </div>
             )}
-            {mergeNotice && !paused && !modal && (
-              <div
-                className="merge-greeting"
-                key={mergeNotice.stamp}
-                role="status"
-              >
-                <Heart size={13} fill="currentColor" />
-                {t("game.merged", { name: name(lineup[mergeNotice.level]) })}
+            {dropCancel && (
+              <div className="drop-cancel" role="status">
+                {t("game.dropCancel")}
               </div>
             )}
             {paused && !modal && (
@@ -538,10 +554,34 @@ export default function App() {
             )}
           </div>
           <div className={`game-bottom ${game.danger ? "warning" : ""}`}>
-            <span>
-              {game.danger ? <CircleHelp size={13} /> : <Heart size={12} />}
-              {game.danger ? t("game.danger") : t("game.mergeRule")}
-            </span>
+            {/* Merge feedback sits under the pile instead of covering the board. */}
+            {game.danger ? (
+              <span role="alert">
+                <TriangleAlert size={13} />
+                {t("game.danger")}
+              </span>
+            ) : mergeNotice && !paused && !modal ? (
+              <span
+                className="merge-greeting"
+                key={mergeNotice.stamp}
+                role="status"
+              >
+                <Heart size={12} fill="currentColor" />
+                <span className="merge-name">
+                  {t("game.merged", { name: name(lineup[mergeNotice.level]) })}
+                </span>
+                {mergeNotice.combo >= 2 && (
+                  <b className="combo-badge">
+                    {t("game.combo", { count: number(mergeNotice.combo) })}
+                  </b>
+                )}
+              </span>
+            ) : (
+              <span>
+                <Heart size={12} />
+                {t("game.mergeRule")}
+              </span>
+            )}
             <span
               className={`status-dot ${paused || modal || game.over ? "is-paused" : ""}`}
               title={

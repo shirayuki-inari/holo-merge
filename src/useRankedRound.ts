@@ -1,35 +1,30 @@
-import { useEffect, useState } from "react";
-import {
-  connectPlayer,
-  startRankedRun,
-  type RankedSession,
-} from "./leaderboard-client";
+import { useEffect, useRef, useState } from "react";
+import { takeRankedRun, type RankedSession } from "./leaderboard-client";
 export function useRankedRound(round: number) {
   const [value, setValue] = useState<{
     round: number;
     session: RankedSession | null;
-    message: "rank.ready" | "rank.offline" | "rank.unavailable";
+    message: "rank.ready" | "rank.unavailable";
   } | null>(null);
+  // One request per round, even when StrictMode re-runs the effect.
+  const requests = useRef(new Map<number, Promise<RankedSession>>());
   useEffect(() => {
     let active = true;
-    connectPlayer()
-      .then(() => (active ? startRankedRun() : null))
-      .then((session) => {
+    let request = requests.current.get(round);
+    if (!request) {
+      request = takeRankedRun();
+      requests.current.clear();
+      requests.current.set(round, request);
+    }
+    request.then(
+      (session) => {
+        if (active) setValue({ round, session, message: "rank.ready" });
+      },
+      () => {
         if (active)
-          setValue({
-            round,
-            session,
-            message: session ? "rank.ready" : "rank.offline",
-          });
-      })
-      .catch(() => {
-        if (active)
-          setValue({
-            round,
-            session: null,
-            message: "rank.unavailable",
-          });
-      });
+          setValue({ round, session: null, message: "rank.unavailable" });
+      },
+    );
     return () => {
       active = false;
     };

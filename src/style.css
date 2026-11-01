@@ -1,7 +1,8 @@
-@import url("https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&display=swap");
-
 :root {
-  font-family: "Poppins", "Noto Sans SC", sans-serif;
+  /* Web fonts load without blocking render (see index.html); system CJK fonts cover the gap. */
+  font-family:
+    "Poppins", "Noto Sans SC", "PingFang SC", "Hiragino Sans GB",
+    "Microsoft YaHei", sans-serif;
   font-synthesis: none;
   color: #24546a;
   background: #f1f8f8;
@@ -12,6 +13,11 @@
   --muted: #86a0a9;
   --line: #deedef;
   --pink: #e7a1af;
+}
+:root:lang(ja) {
+  font-family:
+    "Poppins", "Noto Sans JP", "Hiragino Sans", "Hiragino Kaku Gothic ProN",
+    "Yu Gothic", Meiryo, sans-serif;
 }
 * {
   box-sizing: border-box;
@@ -147,9 +153,9 @@ svg {
   stroke-width: 1.7px;
 }
 .brand p {
-  font-size: 10px;
+  font-size: 11px;
   letter-spacing: 1.5px;
-  color: #88a8af;
+  color: #587b83;
   margin-top: 4px;
 }
 .header-actions {
@@ -164,7 +170,7 @@ svg {
   height: 33px;
   padding: 0;
   border-radius: 11px;
-  color: #80a7b3;
+  color: #6e9ba8;
 }
 .icon-button:hover {
   color: var(--blue);
@@ -182,8 +188,22 @@ svg {
   transform: translateY(-2px);
 }
 .game-desk {
+  /*
+   * Shrink the board on short viewports so the whole board stays on screen:
+   * shell width = canvas height budget × 440/580 + padding and borders.
+   * --board-chrome is the page height above and below the canvas.
+   */
+  --board-chrome: 245px;
+  --board-fit: max(
+    300px,
+    calc((100vh - var(--board-chrome)) * 440 / 580 + 22px)
+  );
   display: grid;
-  grid-template-columns: minmax(0, 420px) minmax(0, 204px);
+  grid-template-columns: minmax(0, min(420px, var(--board-fit))) minmax(
+      0,
+      204px
+    );
+  justify-content: center;
   gap: 11px 26px;
   align-items: start;
   margin-top: 24px;
@@ -221,7 +241,7 @@ svg {
   align-items: center;
   gap: 5px;
   color: #718e9b;
-  font-size: 10px;
+  font-size: 11px;
   letter-spacing: 0.2px;
   white-space: nowrap;
 }
@@ -241,11 +261,11 @@ svg {
   letter-spacing: -0.7px;
 }
 .score-card strong {
-  color: #33afd9;
+  color: #259fc8;
 }
 .best-card strong {
   font-size: 23px;
-  color: #658e9f;
+  color: #567b8a;
   line-height: 1.64;
 }
 .board-actions {
@@ -287,15 +307,16 @@ svg {
   display: flex;
   align-items: center;
   gap: 7px;
-  font-size: 10px;
-  color: #7f9aa4;
+  font-size: 11px;
+  color: #5e7a85;
 }
 .game-bottom svg {
-  color: #b8bfc2;
+  color: #8b969b;
 }
 .game-bottom.warning > span:first-child,
 .game-bottom.warning svg {
-  color: #d38a9a;
+  color: #b9566c;
+  font-weight: 600;
 }
 .status-dot {
   width: 5px;
@@ -314,12 +335,12 @@ svg {
   right: 0;
   top: 40%;
   text-align: center;
-  color: #6496a6;
+  color: #4f7c8a;
 }
 .welcome-tag {
-  font-size: 9px;
+  font-size: 10.5px;
   letter-spacing: 2px;
-  color: #abc0bf;
+  color: #5c7b79;
 }
 .welcome-faces {
   display: flex;
@@ -355,7 +376,7 @@ svg {
   font-size: 11px;
   margin-top: 8px;
   letter-spacing: 0.3px;
-  color: #738e97;
+  color: #617a83;
 }
 .welcome-pointer {
   display: grid;
@@ -367,25 +388,46 @@ svg {
   background: #eef7f5;
   color: #99b8b9;
 }
-.merge-greeting {
+/* Merge feedback lives in the bottom bar, right under the pile. */
+.game-bottom > .merge-greeting {
+  color: #a8566f;
+  font-weight: 500;
+  animation: greeting 1.8s both;
+}
+.game-bottom > .merge-greeting > svg {
+  color: #e48aa2;
+}
+.merge-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.combo-badge {
+  flex-shrink: 0;
+  padding: 1px 7px;
+  border-radius: 10px;
+  background: #1f8fb8;
+  color: #fff;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.drop-cancel {
   pointer-events: none;
   position: absolute;
   z-index: 2;
-  top: 27%;
+  top: 23%;
   left: 50%;
   transform: translateX(-50%);
-  display: flex;
-  align-items: center;
-  gap: 7px;
   white-space: nowrap;
-  padding: 10px 15px;
-  border: 1px solid #f1dce0;
-  border-radius: 20px;
-  background: #fffdfaf0;
-  color: #c88298;
-  box-shadow: 0 3px 15px #a7788810;
-  font-size: 11px;
-  animation: greeting 1.8s both;
+  padding: 7px 13px;
+  border: 1px solid #e6cfd5;
+  border-radius: 16px;
+  background: #fffdfaf2;
+  color: #a8566f;
+  font-size: 12px;
+  font-weight: 600;
 }
 @keyframes greeting {
   0% {
@@ -450,8 +492,8 @@ svg {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 10px;
-  color: #78959e;
+  font-size: 11px;
+  color: #5e7a83;
   text-align: left;
   letter-spacing: 0.6px;
 }
@@ -501,8 +543,8 @@ svg {
   overflow-wrap: anywhere;
 }
 .group-pill {
-  color: #91adb1;
-  font-size: 9px;
+  color: #5a7b7f;
+  font-size: 10.5px;
   margin-top: 3px;
   display: inline-block;
   letter-spacing: 0.3px;
@@ -520,14 +562,14 @@ svg {
   transform: rotate(12deg);
 }
 .goal-note p {
-  color: #9bb1b3;
-  font-size: 9px;
+  color: #5f7a7d;
+  font-size: 10.5px;
   letter-spacing: 0.6px;
 }
 .goal-note h3 {
   font-size: 12px;
   font-weight: 500;
-  color: #79a199;
+  color: #587d76;
   margin-top: 4px;
 }
 .companion-album {
@@ -563,18 +605,18 @@ svg {
 .album-heading h2 {
   font-size: 12px;
   font-weight: 500;
-  color: #849f9c;
+  color: #607b78;
   letter-spacing: 0.8px;
 }
 .album-heading > span {
   font-size: 12px;
-  color: #81b1ab;
+  color: #4e7e78;
   font-weight: 500;
 }
 .album-heading small {
   font-weight: 400;
-  font-size: 9px;
-  color: #b6c4bc;
+  font-size: 10.5px;
+  color: #637b6e;
 }
 .evolution-track {
   display: grid;
@@ -634,8 +676,8 @@ svg {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  color: #75a5b0;
-  font-size: 10px;
+  color: #4e7d88;
+  font-size: 11px;
   margin: 18px auto 0;
   padding: 2px;
 }
@@ -644,9 +686,9 @@ svg {
   gap: 12px;
 }
 .album-caption {
-  font-size: 8px;
+  font-size: 10px;
   text-align: center;
-  color: #b2bbaa;
+  color: #6d7a61;
   margin-top: 8px;
 }
 .play-hint {
@@ -654,8 +696,8 @@ svg {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  color: #78969f;
-  font-size: 10px;
+  color: #5d7a82;
+  font-size: 11px;
   padding: 10px 5px 0;
 }
 .play-hint > span {
@@ -669,11 +711,11 @@ svg {
 kbd {
   display: inline-block;
   font: inherit;
-  font-size: 8px;
+  font-size: 10px;
   min-width: 15px;
   padding: 1px 3px;
   text-align: center;
-  color: #8aabb3;
+  color: #577c85;
   background: #ffffff80;
   border: 1px solid #dce9e9;
   border-bottom-width: 2px;
@@ -690,8 +732,8 @@ kbd {
   align-items: center;
   gap: 6px;
   margin: 31px 0 0;
-  color: #a0b7bc;
-  font-size: 9px;
+  color: #5b7a81;
+  font-size: 10.5px;
   text-align: center;
 }
 .room-footer p {
@@ -707,8 +749,8 @@ kbd {
   display: flex;
   align-items: center;
   gap: 7px;
-  color: #b4c6c8;
-  font-size: 8px;
+  color: #5d7b7f;
+  font-size: 10px;
 }
 .room-footer i {
   font-style: normal;
@@ -719,7 +761,7 @@ kbd {
   gap: 2px;
 }
 .room-footer a:hover {
-  color: #579bb2;
+  color: #427d91;
 }
 .board-overlay {
   position: absolute;
@@ -765,12 +807,12 @@ kbd {
 .board-overlay .eyebrow {
   font-size: 11px;
   letter-spacing: 0.8px;
-  color: #9ab2b2;
+  color: #5e7b7b;
 }
 .board-overlay h2 {
   font-weight: 500;
   font-size: 19px;
-  color: #6597a3;
+  color: #517c87;
   margin-bottom: 10px;
 }
 .end-heart {
@@ -800,7 +842,7 @@ kbd {
 }
 .secondary-button {
   border-radius: 20px;
-  color: #79a3ae;
+  color: #517c87;
   padding: 12px 20px;
   background: #edf5f5;
   font-size: 12px;
@@ -835,13 +877,13 @@ kbd {
   position: absolute;
   top: 12px;
   right: 12px;
-  color: #95adb3;
+  color: #7c99a1;
   width: 29px;
   height: 29px;
 }
 .eyebrow {
-  color: #a7bcb9;
-  font-size: 9px;
+  color: #5e7b77;
+  font-size: 10.5px;
   letter-spacing: 1.5px;
 }
 .modal h2 {
@@ -853,11 +895,11 @@ kbd {
 .modal p {
   font-size: 11px;
   line-height: 1.95;
-  color: #8aa1a7;
+  color: #617a81;
   margin-bottom: 15px;
 }
 .modal b {
-  color: #589aaf;
+  color: #457d8f;
   font-weight: 500;
 }
 .help-demo {
@@ -896,15 +938,15 @@ kbd {
   display: flex;
   align-items: center;
   gap: 7px;
-  color: #81a4aa;
-  font-size: 9px;
+  color: #587c82;
+  font-size: 10.5px;
 }
 .help-controls > span:last-child {
   grid-column: 1 / -1;
 }
 .modal .help-warning {
-  font-size: 10px;
-  color: #a1b0ac;
+  font-size: 11px;
+  color: #677a75;
   margin-bottom: 22px;
 }
 .modal-actions {
@@ -932,8 +974,8 @@ kbd {
   border: 1px dashed #cee4dd;
 }
 .result-score > span {
-  font-size: 10px;
-  color: #8fb0ac;
+  font-size: 11px;
+  color: #587c78;
   display: block;
 }
 .result-score > strong {
@@ -941,14 +983,14 @@ kbd {
   font-size: 46px;
   font-weight: 600;
   letter-spacing: -1.5px;
-  color: #48b5d5;
+  color: #2da0c2;
 }
 .result-details {
   display: flex;
   justify-content: space-between;
   gap: 8px;
-  font-size: 10px;
-  color: #99b1b5;
+  font-size: 11px;
+  color: #5c7a7f;
   margin: 20px 0 24px;
 }
 .lineup-list {
@@ -971,8 +1013,8 @@ kbd {
   box-shadow: 0 0 0 1px #deebe6;
 }
 .lineup-number {
-  color: #a9c5c1;
-  font-size: 10px;
+  color: #547c76;
+  font-size: 11px;
 }
 .lineup-list strong {
   display: block;
@@ -980,8 +1022,8 @@ kbd {
   font-weight: 500;
 }
 .lineup-list small {
-  color: #9cb5b6;
-  font-size: 9px;
+  color: #5c7b7c;
+  font-size: 10.5px;
   display: block;
   margin-top: 3px;
 }
@@ -1000,7 +1042,7 @@ kbd {
     margin-top: 22px;
   }
   .game-desk {
-    grid-template-columns: minmax(0, 1fr) 170px;
+    grid-template-columns: minmax(0, var(--board-fit)) 170px;
     gap: 11px 20px;
     margin-top: 21px;
   }
@@ -1029,13 +1071,13 @@ kbd {
     font-size: 13px;
   }
   .empty-welcome p {
-    font-size: 10px;
+    font-size: 11px;
   }
   .welcome-faces .portrait {
     width: 44px;
   }
   .game-bottom > span:first-child {
-    font-size: 9px;
+    font-size: 10.5px;
   }
   .keyboard-hint {
     display: none !important;
@@ -1072,7 +1114,7 @@ kbd {
     margin-left: 7px;
   }
   .brand p {
-    font-size: 9px;
+    font-size: 10.5px;
     letter-spacing: 1px;
     margin-top: 3px;
   }
@@ -1095,6 +1137,17 @@ kbd {
   .play-companions {
     display: contents;
   }
+  .game-desk {
+    --board-chrome: 256px;
+    --board-fit: max(
+      280px,
+      calc((100vh - var(--board-chrome)) * 440 / 580 + 22px)
+    );
+  }
+  .game-shell {
+    justify-self: center;
+    width: min(100%, var(--board-fit));
+  }
   .game-shell {
     grid-row: 2;
     padding: 0 8px;
@@ -1110,7 +1163,7 @@ kbd {
   }
   .score-card > span,
   .best-card > span {
-    font-size: 9px;
+    font-size: 10.5px;
   }
   .score-card strong {
     font-size: 25px;
@@ -1134,7 +1187,7 @@ kbd {
     padding: 8px 7px;
   }
   .game-bottom > span:first-child {
-    font-size: 9px;
+    font-size: 10.5px;
   }
   .next-card {
     grid-column: 1;
@@ -1161,7 +1214,7 @@ kbd {
     border-color: #d4e6e5;
   }
   .note-heading {
-    font-size: 9px;
+    font-size: 10.5px;
     letter-spacing: 0;
     flex-shrink: 0;
   }
@@ -1197,7 +1250,7 @@ kbd {
     overflow: hidden;
   }
   .group-pill {
-    font-size: 7px;
+    font-size: 10px;
     margin-top: 1px;
     display: block;
   }
@@ -1215,7 +1268,7 @@ kbd {
     grid-column: 1;
     padding: 8px 6px 0;
     min-height: 21px;
-    font-size: 8px;
+    font-size: 10px;
     justify-content: center;
     gap: 20px;
   }
@@ -1230,7 +1283,7 @@ kbd {
   }
 
   kbd {
-    font-size: 7px;
+    font-size: 10px;
     min-width: 13px;
     border-radius: 3px;
     padding: 0 2px;
@@ -1258,14 +1311,14 @@ kbd {
     gap: 9px;
   }
   .album-heading h2 {
-    font-size: 10px;
+    font-size: 11px;
     letter-spacing: 0.4px;
   }
   .album-heading > span {
-    font-size: 10px;
+    font-size: 11px;
   }
   .album-heading small {
-    font-size: 8px;
+    font-size: 10px;
   }
   .evolution-track {
     grid-row: 2;
@@ -1285,7 +1338,7 @@ kbd {
   .companion-album .text-button {
     grid-row: 1;
     grid-column: 2;
-    font-size: 8px;
+    font-size: 10px;
     gap: 4px;
     padding: 0;
     margin: 0;
@@ -1301,7 +1354,7 @@ kbd {
     top: 37%;
   }
   .welcome-tag {
-    font-size: 8px;
+    font-size: 10px;
     letter-spacing: 1.5px;
   }
   .welcome-faces {
@@ -1315,24 +1368,20 @@ kbd {
     font-size: 14px;
   }
   .empty-welcome p {
-    font-size: 10px;
+    font-size: 11px;
   }
   .welcome-pointer {
     width: 29px;
     height: 29px;
     margin-top: 17px;
   }
-  .merge-greeting {
-    font-size: 10px;
-    padding: 9px 12px;
-  }
   .room-footer {
     margin-top: 24px;
-    font-size: 8px;
+    font-size: 10px;
     gap: 5px;
   }
   .room-footer > span {
-    font-size: 7px;
+    font-size: 10px;
   }
   .board-overlay h2 {
     font-size: 18px;
@@ -1344,14 +1393,14 @@ kbd {
     font-size: 19px;
   }
   .modal p {
-    font-size: 10px;
+    font-size: 11px;
   }
   .help-controls {
     padding: 13px;
     gap: 12px 6px;
   }
   .help-controls > span {
-    font-size: 8px;
+    font-size: 10px;
   }
   .help-controls svg {
     width: 16px;
@@ -1406,6 +1455,22 @@ kbd {
     justify-content: center;
   }
 }
+@supports (height: 100dvh) {
+  .game-desk {
+    --board-fit: max(
+      300px,
+      calc((100dvh - var(--board-chrome)) * 440 / 580 + 22px)
+    );
+  }
+  @media (max-width: 560px) {
+    .game-desk {
+      --board-fit: max(
+        280px,
+        calc((100dvh - var(--board-chrome)) * 440 / 580 + 22px)
+      );
+    }
+  }
+}
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -1417,8 +1482,8 @@ kbd {
 
 .rank-round-status {
   text-align: center;
-  font-size: 9px;
-  color: #88a5ac;
+  font-size: 10.5px;
+  color: #5b7b82;
   margin: 16px 0 -12px;
 }
 .leaderboard .player-summary {
@@ -1446,8 +1511,8 @@ kbd {
 }
 .player-summary small {
   display: block;
-  font-size: 10px;
-  color: #8da6aa;
+  font-size: 11px;
+  color: #5f7b7f;
   margin-top: 3px;
 }
 .player-summary .text-button {
@@ -1523,7 +1588,7 @@ kbd {
   justify-content: space-between;
   padding: 8px 0;
   font-size: 11px;
-  color: #7da1aa;
+  color: #567b84;
 }
 .rank-heading > span {
   display: flex;
@@ -1551,7 +1616,7 @@ kbd {
   width: 21px;
   text-align: center;
   font-size: 11px;
-  color: #9ab0b1;
+  color: #5f7a7b;
   flex-shrink: 0;
 }
 .rank-list li:nth-child(-n + 3) .rank-number {
@@ -1568,8 +1633,8 @@ kbd {
   overflow-wrap: anywhere;
 }
 .rank-name small {
-  font-size: 8px;
-  color: #88abb5;
+  font-size: 10px;
+  color: #547c88;
   margin-left: 5px;
 }
 .rank-list strong {
@@ -1578,9 +1643,9 @@ kbd {
   flex-shrink: 0;
 }
 .leaderboard .rank-help {
-  font-size: 9px;
+  font-size: 10.5px;
   line-height: 1.8;
-  color: #9db2b5;
+  color: #5f7a7e;
   margin: 10px 0 0;
 }
 .leaderboard .rank-feedback {
@@ -1590,7 +1655,7 @@ kbd {
   color: #558e7e;
 }
 .leaderboard .rank-error {
-  color: #c37b87;
+  color: #b45a69;
 }
 .leaderboard .rank-empty {
   text-align: center;
@@ -1626,7 +1691,7 @@ kbd {
 .setting-row label {
   font-size: 12px;
   font-weight: 500;
-  color: #638b96;
+  color: #587b85;
 }
 .setting-switch {
   width: 40px;
@@ -1667,7 +1732,7 @@ kbd {
   padding: 13px 8px;
   border: 1px solid #d8e8e4;
   border-radius: 13px;
-  color: #9bb7b8;
+  color: #597c7d;
   background: #f6faf5;
   font-size: 13px;
   font-variant-numeric: tabular-nums;
@@ -1687,7 +1752,7 @@ kbd {
 }
 .settings-panel .setting-row p {
   margin: 5px 0 0;
-  font-size: 10px;
+  font-size: 11px;
   line-height: 1.7;
 }
 .language-setting {
@@ -1698,7 +1763,7 @@ kbd {
 }
 .language-setting select {
   max-width: 58%;
-  color: #638b96;
+  color: #587b85;
   border: 1px solid #cfe4e6;
   border-radius: 10px;
   background: #fff;
@@ -1708,7 +1773,7 @@ kbd {
 }
 .settings-panel .settings-hint {
   margin: 0;
-  font-size: 10px;
+  font-size: 11px;
 }
 .brand,
 .brand > div {
@@ -1740,7 +1805,7 @@ kbd {
 }
 @media (max-width: 560px) {
   .brand p {
-    font-size: 8px;
+    font-size: 10px;
     letter-spacing: 0.2px;
   }
   .game-toolbar {

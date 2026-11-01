@@ -11,7 +11,7 @@ import {
 } from "./model";
 import { seededRandom, type Replay } from "./replay";
 const { Engine, Bodies, Body, Composite, Events } = Matter;
-type Orb = { body: Matter.Body; level: number; born: number };
+export type Orb = { body: Matter.Body; level: number; born: number };
 export interface GameState {
   score: number;
   current: number;
@@ -32,6 +32,11 @@ export interface SimulationOptions {
   onWin: () => void;
 }
 export const STEP_MS = 1000 / 120;
+/** Newly dropped or merged members are ignored by the limit line for this long. */
+export const DANGER_GRACE_MS = 1600;
+/** Continuous time above the limit line that ends the round. */
+export const DANGER_LIMIT_MS = 2200;
+export const DROP_COOLDOWN_MS = 380;
 export class Simulation {
   readonly physics = Engine.create({
     enableSleeping: true,
@@ -96,7 +101,8 @@ export class Simulation {
     this.setAim(this.x + dx);
   }
   drop() {
-    if (this.state.over || this.time - this.lastDrop < 380) return false;
+    if (this.state.over || this.time - this.lastDrop < DROP_COOLDOWN_MS)
+      return false;
     this.commands.push([this.ticks, this.x]);
     this.addOrb(this.state.current, this.x, 44);
     this.state.drops++;
@@ -122,11 +128,22 @@ export class Simulation {
     this.emit();
     this.options.onEnd();
   }
+  /** 0 while the board is safe, rising to 1 when the round ends. */
+  get dangerProgress() {
+    return Math.min(1, this.dangerTime / DANGER_LIMIT_MS);
+  }
+  protected isAboveLimit(orb: Orb) {
+    return (
+      this.time - orb.born > DANGER_GRACE_MS &&
+      orb.body.position.y - RADII[orb.level] < DANGER_Y
+    );
+  }
   protected onMergeVisual(
     _level: number,
     _x: number,
     _y: number,
     _points: number,
+    _id: number,
   ) {}
   protected addOrb(level: number, x: number, y: number) {
     const body = Bodies.circle(x, y, RADII[level], {
@@ -172,7 +189,7 @@ export class Simulation {
       this.state.combo =
         this.time - this.lastMerge < 1300 ? this.state.combo + 1 : 1;
       this.lastMerge = this.time;
-      this.onMergeVisual(level, x, y, points);
+      this.onMergeVisual(level, x, y, points, body.id);
       this.options.onMerge(level);
       if (level === RADII.length - 1 && !this.state.won) {
         this.state.won = true;
@@ -194,10 +211,7 @@ export class Simulation {
     this.flushMerges();
     let danger = false;
     for (const orb of this.orbs.values())
-      if (
-        this.time - orb.born > 1600 &&
-        orb.body.position.y - RADII[orb.level] < DANGER_Y
-      ) {
+      if (this.isAboveLimit(orb)) {
         danger = true;
         break;
       }
@@ -206,7 +220,7 @@ export class Simulation {
       this.state.danger = danger;
       this.emit();
     }
-    if (this.dangerTime > 2200) {
+    if (this.dangerTime > DANGER_LIMIT_MS) {
       this.state.over = true;
       this.emit();
       this.options.onEnd();

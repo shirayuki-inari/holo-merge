@@ -91,6 +91,23 @@ async function request<T>(
     throw new LeaderboardError("无法连接排行榜，请稍后重试。", 0, "network");
   }
 }
+const registeredKey = "holo-merge-registered-v1";
+/** Remember (per identity) that registration succeeded, so rounds can skip it. */
+function setRegistered(value: boolean) {
+  try {
+    if (value) localStorage.setItem(registeredKey, token().slice(0, 12));
+    else localStorage.removeItem(registeredKey);
+  } catch {
+    /* Registration is checked again next time. */
+  }
+}
+function isRegistered() {
+  try {
+    return localStorage.getItem(registeredKey) === token().slice(0, 12);
+  } catch {
+    return false;
+  }
+}
 let connecting: Promise<Board> | null = null;
 export function connectPlayer(): Promise<Board> {
   if (connecting) return connecting;
@@ -109,6 +126,7 @@ export function connectPlayer(): Promise<Board> {
       }
       board = await loadBoard();
     }
+    setRegistered(true);
     return board;
   })().finally(() => {
     connecting = null;
@@ -119,6 +137,47 @@ export const loadBoard = () => request<Board>("/leaderboard");
 export const saveProfile = (name: string, avatar: string) =>
   request<Board>("/player", "PATCH", { name, avatar });
 export const startRankedRun = () => request<RankedSession>("/runs", "POST", {});
+/**
+ * Start a ranked round. Registered players only need one request; the
+ * leaderboard itself is loaded when someone opens it.
+ */
+export async function beginRankedRun(): Promise<RankedSession> {
+  if (!isRegistered()) await connectPlayer();
+  try {
+    return await startRankedRun();
+  } catch (error) {
+    if (!(error instanceof LeaderboardError) || error.status !== 401)
+      throw error;
+    // The server no longer knows this identity: register again once.
+    setRegistered(false);
+    await connectPlayer();
+    return startRankedRun();
+  }
+}
+// Sessions last six hours; never start a round on one that is about to expire.
+const MIN_SESSION_LIFETIME = 10 * 60_000;
+let prefetched: Promise<RankedSession> | null = null;
+/** Request the next round's seed while the player looks at the result screen. */
+export function prefetchRankedRun() {
+  if (prefetched) return;
+  const request = beginRankedRun();
+  prefetched = request;
+  request.catch(() => {
+    if (prefetched === request) prefetched = null;
+  });
+}
+export function takeRankedRun(): Promise<RankedSession> {
+  const request = prefetched;
+  prefetched = null;
+  if (!request) return beginRankedRun();
+  return request.then(
+    (session) =>
+      session.expires - Date.now() > MIN_SESSION_LIFETIME
+        ? session
+        : beginRankedRun(),
+    () => beginRankedRun(),
+  );
+}
 export const submitScore = (run: string, replay: Replay) =>
   request<Board & { acceptedScore: number; improved: boolean }>(
     "/scores",

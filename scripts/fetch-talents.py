@@ -21,9 +21,11 @@ def group(entry):
         jp=re.sub('<[^>]*>','',names[1]).strip()
         if '卒業' in jp or '活動終了' in jp: continue
         talent_id=link[2]; source=BASE+img[1] if img[1].startswith('/') else img[1]
-        target=ROOT/'public'/'avatars'/(talent_id+'.png')
+        # Official PNGs are kept as sources; scripts/optimize-avatars.py encodes the deployed WebP.
+        target=ROOT/'assets'/'avatars'/(talent_id+'.png')
+        target.parent.mkdir(parents=True,exist_ok=True)
         if not target.exists(): target.write_bytes(read(source))
-        talents.append(dict(id=talent_id,name=jp,en=names[2].strip(),image='/avatars/'+talent_id+'.png',source=source,url=BASE+link[1]))
+        talents.append(dict(id=talent_id,name=jp,en=names[2].strip(),image='/avatars/'+talent_id+'.webp',source=source,url=BASE+link[1]))
     if not talents: raise ValueError('No talents in '+slug)
     print(name, len(talents), flush=True)
     return dict(id=slug,name=name,year=year,members=talents)
@@ -31,3 +33,4 @@ def group(entry):
 with concurrent.futures.ThreadPoolExecutor(max_workers=5) as pool: groups=list(pool.map(group,GROUPS))
 (ROOT/'src'/'talents.json').write_text(json.dumps(groups,ensure_ascii=False,indent=2)+'\n')
 print('Saved',len({m['id'] for g in groups for m in g['members']}),'unique portraits across',len(groups),'groups.')
+print('Next: python scripts/optimize-avatars.py')

@@ -38,7 +38,7 @@ test("lineup contains one member from each Japanese debut group, newest to oldes
     );
   }
 });
-test("all downloaded portraits have official provenance and valid PNG content", () => {
+test("all portraits have official PNG sources and deployed WebP files", () => {
   for (const member of groups.flatMap((g) => g.members)) {
     assert.ok(
       member.source.startsWith(
@@ -48,12 +48,20 @@ test("all downloaded portraits have official provenance and valid PNG content", 
     assert.ok(
       member.url.startsWith("https://hololive.hololivepro.com/talents/"),
     );
-    const path = "public" + member.image;
-    assert.ok(existsSync(path), member.id);
+    const source = `assets/avatars/${member.id}.png`;
+    assert.ok(existsSync(source), member.id);
     assert.deepEqual(
-      [...readFileSync(path).subarray(0, 8)],
+      [...readFileSync(source).subarray(0, 8)],
       [137, 80, 78, 71, 13, 10, 26, 10],
     );
+    assert.equal(member.image, `/avatars/${member.id}.webp`);
+    const path = "public" + member.image;
+    assert.ok(existsSync(path), member.id);
+    const webp = readFileSync(path);
+    assert.equal(webp.subarray(0, 4).toString("latin1"), "RIFF");
+    assert.equal(webp.subarray(8, 12).toString("latin1"), "WEBP");
+    // Deployed portraits stay small; the PNG originals are ~150 KB each.
+    assert.ok(webp.length < 60_000, `${member.id}: ${webp.length} bytes`);
   }
 });
 test("only matching levels merge, maximum level stays on the board", () => {
