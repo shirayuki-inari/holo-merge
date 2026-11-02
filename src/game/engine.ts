@@ -29,9 +29,16 @@ interface Options extends SimulationOptions {
 }
 /** Visual-only grow-in for merged members; physics always uses the full radius. */
 const SPAWN_MS = 170;
+/** Held arrow keys steer the aim: start slow for precision, then speed up (px/ms). */
+const STEER_MIN_SPEED = 0.18;
+const STEER_MAX_SPEED = 0.62;
+const STEER_ACCEL_MS = 450;
 const FALLBACK_FONT = '"Poppins", "Noto Sans SC", "Noto Sans JP", sans-serif';
 function currentDpr() {
   return Math.min(window.devicePixelRatio || 1, 2);
+}
+function easeOutCubic(t: number) {
+  return 1 - (1 - t) ** 3;
 }
 function easeOutBack(t: number) {
   const c1 = 1.70158,
@@ -74,6 +81,11 @@ export class HoloEngine extends Simulation {
   private dirty = true;
   private animating = true;
   private aimCancelled = false;
+  private steer = 0;
+  private steerStart = 0;
+  private reducedMotion =
+    typeof matchMedia === "function" &&
+    matchMedia("(prefers-reduced-motion: reduce)").matches;
   private font = FALLBACK_FONT;
   private dpr = currentDpr();
   private dprQuery: MediaQueryList | null = null;
@@ -112,6 +124,13 @@ export class HoloEngine extends Simulation {
   override setAim(x: number) {
     super.setAim(x);
     this.requestDraw();
+  }
+  /** -1 / 1 while an arrow key is held, 0 when released. */
+  setSteer(direction: number) {
+    const d = Math.sign(direction);
+    if (d === this.steer) return;
+    this.steer = d;
+    this.steerStart = performance.now();
   }
   private readFont() {
     const family = getComputedStyle(this.canvas).fontFamily;
@@ -328,11 +347,22 @@ export class HoloEngine extends Simulation {
     return false;
   }
   private tick = (now: number) => {
-    this.frame = 0;
-    if (this.disposed) return;
+    if (this.disposed) {
+      this.frame = 0;
+      return;
+    }
     const elapsed = this.last ? Math.min(now - this.last, 50) : 0;
     this.last = now;
-    if (!this.paused && !this.hidden && !this.state.over) {
+    const running = !this.paused && !this.hidden && !this.state.over;
+    // Steer before clearing `frame`, so setAim only marks the frame dirty.
+    if (running && this.steer) {
+      const held = Math.min(1, (now - this.steerStart) / STEER_ACCEL_MS);
+      const speed =
+        STEER_MIN_SPEED + (STEER_MAX_SPEED - STEER_MIN_SPEED) * held;
+      this.moveAim(this.steer * speed * elapsed);
+    }
+    this.frame = 0;
+    if (running) {
       this.accumulator += elapsed;
       while (this.accumulator >= STEP_MS) {
         this.step(STEP_MS);
@@ -391,7 +421,10 @@ export class HoloEngine extends Simulation {
     );
     if (!this.state.over) {
       const r = RADII[this.state.current];
-      const cooling = this.time - this.lastDrop < DROP_COOLDOWN_MS;
+      // The next member eases into the hand over the drop cooldown.
+      const t = Math.min(1, (this.time - this.lastDrop) / DROP_COOLDOWN_MS);
+      const ready = easeOutCubic(t);
+      const held = this.reducedMotion ? r : r * (0.55 + 0.45 * easeOutBack(t));
       c.save();
       c.setLineDash([3, 6]);
       c.strokeStyle = this.aimCancelled ? "#d5dcdc" : "#a9d6d6";
@@ -400,13 +433,13 @@ export class HoloEngine extends Simulation {
       c.lineTo(this.x, HEIGHT - 12);
       c.stroke();
       c.restore();
-      c.globalAlpha = this.aimCancelled ? 0.3 : cooling ? 0.45 : 0.9;
+      c.globalAlpha = this.aimCancelled ? 0.3 : 0.9 * (0.3 + 0.7 * ready);
       c.drawImage(
         this.sprites[this.state.current],
-        this.x - r,
-        44 - r,
-        r * 2,
-        r * 2,
+        this.x - held,
+        44 - held,
+        held * 2,
+        held * 2,
       );
       c.globalAlpha = 1;
       c.fillStyle = this.aimCancelled ? "#b8c5c7" : "#27bad4";

@@ -73,6 +73,8 @@ try {
     ) > 0,
   );
   await page.getByRole("button", { name: zh("settings.title"), exact: true }).click();
+  // The open dialog pauses the round; let the score count-up (320 ms) settle.
+  await page.waitForTimeout(400);
   await page.evaluate(() => {
     window.__originalCanvas = document.querySelector("canvas");
     window.__score = document.querySelector(".score-card strong").textContent;

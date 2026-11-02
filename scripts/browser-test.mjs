@@ -64,6 +64,23 @@ try {
   console.log(
     "PASS desktop images, keyboard drop, pause/resume, BGM toggle, modal and confirmed restart",
   );
+  await canvas.focus();
+  await page.keyboard.press("Space");
+  await page.waitForTimeout(300);
+  await page.evaluate(() => {
+    const setHidden = (value) => {
+      Object.defineProperty(document, "hidden", { configurable: true, value });
+      document.dispatchEvent(new Event("visibilitychange"));
+    };
+    setHidden(true);
+    setHidden(false);
+    delete document.hidden;
+  });
+  await page
+    .locator(".board-overlay")
+    .getByRole("button", { name: zh("game.resume"), exact: true })
+    .click();
+  console.log("PASS leaving the tab mid-round pauses it");
   // Game rules (merging, limit line, drops, determinism) are tested in Node by
   // tests/simulation.test.ts. These cases need a real canvas and animation frames.
   const engineReport = await page.evaluate(
@@ -166,6 +183,21 @@ try {
         f.dispose();
       }
       {
+        const f = fixture();
+        f.game.setPaused(false);
+        const start = f.game.x;
+        f.game.setSteer(1);
+        await wait(300);
+        f.game.setSteer(0);
+        const moved = f.game.x - start;
+        await wait(60);
+        check(
+          moved > 30 && f.game.x === start + moved,
+          `a held arrow glides the aim (${moved.toFixed(0)} px in 300 ms) and stops on release`,
+        );
+        f.dispose();
+      }
+      {
         // A paused board stays painted when the device pixel ratio changes
         // (zoom fires resize; rebuilding the bitmap clears it).
         const f = fixture();
@@ -265,6 +297,14 @@ try {
           .querySelector(".score-card strong")
           .textContent.replaceAll(",", ""),
       ) > 0,
+  );
+  // Scores count up; wait for the shown best to reach the stored value.
+  await record.waitForFunction(
+    () =>
+      document
+        .querySelector(".best-card strong")
+        .textContent.replaceAll(",", "") ===
+      localStorage.getItem("holo-merge-best-v1"),
   );
   const savedBest = await record.locator(".best-card strong").innerText();
   await record.screenshot({ path: ".qa/desktop-playing.png", fullPage: true });

@@ -41,6 +41,7 @@ import {
 import { useI18n } from "./i18n";
 import SettingsPanel from "./Settings";
 import { useVoicePreference } from "./preferences";
+import { prefersReducedMotion, useCountUp } from "./motion";
 type ScoreFeedback =
   | { kind: "capacity" | "expired" }
   | { kind: "accepted"; score: number; improved: boolean }
@@ -73,14 +74,33 @@ function Portrait({
     />
   );
 }
+/** A score that counts up when it rises and gives a small bump. */
+function CountUp({ value, bump = false }: { value: number; bump?: boolean }) {
+  const { number } = useI18n();
+  const shown = useCountUp(value);
+  const ref = useRef<HTMLElement>(null);
+  const previous = useRef(value);
+  useEffect(() => {
+    if (bump && value > previous.current && !prefersReducedMotion())
+      ref.current?.animate?.(
+        [{ transform: "scale(1.12)" }, { transform: "scale(1)" }],
+        { duration: 260, easing: "cubic-bezier(.2,.8,.25,1)" },
+      );
+    previous.current = value;
+  }, [value, bump]);
+  return <strong ref={ref}>{number(shown)}</strong>;
+}
 function Modal({
   children,
   close,
   title,
+  view,
 }: {
   children: ReactNode;
   close: () => void;
   title: string;
+  /** Switching views inside an open dialog fades the new content in. */
+  view: string;
 }) {
   const { t } = useI18n();
   const ref = useRef<HTMLDialogElement>(null);
@@ -111,7 +131,7 @@ function Modal({
           close();
       }}
     >
-      <div className="modal-inner">
+      <div className="modal-inner" key={view}>
         <button
           className="icon-button modal-close"
           onClick={close}
@@ -195,8 +215,20 @@ export default function App() {
   >(null);
   const dragging = useRef(false),
     pointerStart = useRef({ x: 0, y: 0 });
+  const heldArrows = useRef(new Set<string>());
   // Touch drags that move far vertically cancel the drop; say so while armed.
   const [dropCancel, setDropCancel] = useState(false);
+  // Leaving the tab mid-round pauses it, so the player returns to a "resume"
+  // button instead of a board that is already falling again.
+  const roundInProgress = ranked.ready && game.drops > 0 && !game.over;
+  useEffect(() => {
+    if (!roundInProgress) return;
+    const onVisibility = () => {
+      if (document.hidden) setPaused(true);
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => document.removeEventListener("visibilitychange", onVisibility);
+  }, [roundInProgress]);
   useEffect(() => {
     const player = new CharacterEffectsPlayer();
     player.setEnabled(voicesInitial.current);
@@ -327,6 +359,12 @@ export default function App() {
     if (instance.drop())
       characterEffects.current?.play("drop", lineup[level].id);
   }
+  function steer() {
+    const held = heldArrows.current;
+    engine.current?.setSteer(
+      (held.has("ArrowRight") ? 1 : 0) - (held.has("ArrowLeft") ? 1 : 0),
+    );
+  }
   function isCancelGesture(clientY: number) {
     return Math.abs(clientY - pointerStart.current.y) > 100;
   }
@@ -414,14 +452,14 @@ export default function App() {
                 <Sparkles size={12} />
                 {t("game.score")}
               </span>
-              <strong>{number(game.score)}</strong>
+              <CountUp value={game.score} bump />
             </div>
             <div className="best-card">
               <span>
                 <Trophy size={12} />
                 {t("game.best")}
               </span>
-              <strong>{number(best)}</strong>
+              <CountUp value={best} />
             </div>
             <div className="board-actions">
               <button
@@ -482,11 +520,24 @@ export default function App() {
                   )
                 )
                   e.preventDefault();
-                if (e.key === "ArrowLeft") engine.current?.moveAim(-14);
-                if (e.key === "ArrowRight") engine.current?.moveAim(14);
+                // A tap nudges the aim; holding glides it (see HoloEngine.setSteer).
+                if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+                  if (!e.repeat) {
+                    engine.current?.moveAim(e.key === "ArrowLeft" ? -8 : 8);
+                    heldArrows.current.add(e.key);
+                    steer();
+                  }
+                }
                 if ((e.key === " " || e.key === "Enter") && !e.repeat) drop();
                 if ((e.key === "p" || e.key === "P") && !e.repeat)
                   setPaused((v) => !v);
+              }}
+              onKeyUp={(e) => {
+                if (heldArrows.current.delete(e.key)) steer();
+              }}
+              onBlur={() => {
+                heldArrows.current.clear();
+                steer();
               }}
             />
 
@@ -601,14 +652,17 @@ export default function App() {
               {t("lineup.next")}
               <Heart size={12} />
             </div>
+            {/* Keyed by drop count so each new "next" member eases in. */}
             <div className="next-orbit">
               <Portrait
+                key={game.drops}
+                className="next-enter"
                 talent={lineup[game.next]}
                 style={{ borderColor: COLORS[game.next] }}
               />
               <span className="next-spark">✧</span>
             </div>
-            <div className="next-name">
+            <div className="next-name next-enter" key={game.drops}>
               <h2>{name(lineup[game.next])}</h2>
               <span className="group-pill">{group(groups[game.next])}</span>
             </div>
@@ -702,6 +756,7 @@ export default function App() {
       {modal && (
         <Modal
           close={closeModal}
+          view={modal}
           title={
             modal === "help"
               ? t("help.title")
