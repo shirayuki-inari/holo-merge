@@ -13,8 +13,8 @@ export function savePreference(key: string, value: string) {
     /* Storage is optional. */
   }
 }
-export function useVoicePreference(change: (enabled: boolean) => void) {
-  const key = "holo-merge-voices-enabled-v1";
+/** An on/off preference saved in this browser; on unless turned off. */
+function useToggle(key: string, change?: (enabled: boolean) => void) {
   const [enabled, setEnabled] = useState(() => readEnabled(key));
   const ref = useRef(enabled);
   return {
@@ -22,9 +22,15 @@ export function useVoicePreference(change: (enabled: boolean) => void) {
     toggle() {
       const next = !ref.current;
       ref.current = next;
-      change(next);
+      change?.(next);
       setEnabled(next);
       savePreference(key, String(next));
     },
   };
+}
+export function useVoicePreference(change: (enabled: boolean) => void) {
+  return useToggle("holo-merge-voices-enabled-v1", change);
+}
+export function useHapticsPreference() {
+  return useToggle("holo-merge-haptics-enabled-v1");
 }

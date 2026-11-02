@@ -11,6 +11,8 @@ const messages = {
   "settings.trackNumber": "曲目 {number}",
   "settings.voice": "角色语音",
   "settings.voiceHint": "播放合成与最高等级语音。",
+  "settings.haptics": "振动反馈",
+  "settings.hapticsHint": "合成和结束时手机轻微振动。",
   "settings.language": "语言 / Language",
   "settings.saved": "设置会保存在此浏览器。",
   "bgm.off": "关闭背景音乐",

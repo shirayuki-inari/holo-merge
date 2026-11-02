@@ -198,6 +198,21 @@ try {
         f.dispose();
       }
       {
+        // Two overlapping members merge; the pair slides together, then clears.
+        const f = fixture();
+        f.game.addOrb(0, 220, 520);
+        f.game.addOrb(0, 224, 500);
+        step(f.game, 4);
+        const merged = f.game.orbs.size === 1 && f.game.ghosts.length === 2;
+        f.game.setPaused(false);
+        await wait(250);
+        check(
+          merged && f.game.ghosts.length === 0,
+          "a merge slides both members into the new one, then clears",
+        );
+        f.dispose();
+      }
+      {
         // A paused board stays painted when the device pixel ratio changes
         // (zoom fires resize; rebuilding the bitmap clears it).
         const f = fixture();
@@ -358,6 +373,23 @@ try {
   await mobile.locator("canvas").scrollIntoViewIfNeeded();
   await mobile.screenshot({ path: ".qa/mobile-playing.png", fullPage: true });
   console.log("PASS mobile touch drop and modal");
+  // Phones get a vibration switch; it persists like the other preferences.
+  await mobile.getByRole("button", { name: zh("settings.title"), exact: true }).click();
+  const hapticsSwitch = mobile.getByRole("switch", {
+    name: zh("settings.haptics"),
+    exact: true,
+  });
+  assert.equal(await hapticsSwitch.getAttribute("aria-checked"), "true");
+  await hapticsSwitch.click();
+  assert.equal(
+    await mobile.evaluate(() =>
+      localStorage.getItem("holo-merge-haptics-enabled-v1"),
+    ),
+    "false",
+  );
+  await hapticsSwitch.click();
+  await mobile.keyboard.press("Escape");
+  console.log("PASS mobile vibration preference");
   // A drag that moves far vertically cancels the drop and says so while armed.
   await mobile.getByRole("button", { name: zh("game.restart"), exact: true }).click();
   await mobile

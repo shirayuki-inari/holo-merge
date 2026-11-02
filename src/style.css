@@ -332,11 +332,20 @@ svg {
 .empty-welcome {
   pointer-events: none;
   position: absolute;
-  left: 0;
-  right: 0;
+  left: 50%;
   top: 40%;
+  translate: -50% 0;
+  width: max-content;
+  max-width: calc(100% - 32px);
+  padding: 16px 26px 18px;
+  /* A paper card, so the aim guide passes behind the hint instead of through it. */
+  border: 1px solid #e5efec;
+  border-radius: 20px;
+  background: #fffefbf0;
+  box-shadow: 0 3px 0 #edf4f1;
   text-align: center;
   color: #4f7c8a;
+  animation: fade-in 260ms ease-out both;
 }
 .welcome-tag {
   font-size: 10.5px;

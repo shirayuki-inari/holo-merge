@@ -40,7 +40,8 @@ import {
 } from "./leaderboard-client";
 import { useI18n } from "./i18n";
 import SettingsPanel from "./Settings";
-import { useVoicePreference } from "./preferences";
+import { useHapticsPreference, useVoicePreference } from "./preferences";
+import { vibrate } from "./haptics";
 import { prefersReducedMotion, useCountUp } from "./motion";
 type ScoreFeedback =
   | { kind: "capacity" | "expired" }
@@ -203,6 +204,13 @@ export default function App() {
     characterEffects.current?.setEnabled(enabled),
   );
   const voicesInitial = useRef(voices.enabled);
+  const haptics = useHapticsPreference();
+  // Engine callbacks outlive renders; read the current choice through a ref.
+  const hapticsOn = useRef(haptics.enabled);
+  hapticsOn.current = haptics.enabled;
+  const buzz = (pattern: number | number[]) => {
+    if (hapticsOn.current) vibrate(pattern);
+  };
   const [modal, setModal] = useState<
     | "help"
     | "restart"
@@ -263,14 +271,19 @@ export default function App() {
       },
       onMerge: (level) => {
         characterEffects.current?.play("merge", lineup[level].id);
+        buzz(level >= 6 ? 24 : 12);
         setMergeNotice({
           level,
           combo: instance.state.combo,
           stamp: Date.now(),
         });
       },
-      onEnd: () => setModal("over"),
+      onEnd: () => {
+        buzz(45);
+        setModal("over");
+      },
       onWin: () => {
+        buzz([30, 60, 40]);
         characterEffects.current?.play("win", lineup[10].id);
         setModal("win");
       },
@@ -316,12 +329,15 @@ export default function App() {
       session = ranked.session;
     if (!instance || !session || submitting || submitted) return;
     const replay = instance.replay();
+    // Result screens submit in one tap, so every outcome shows on the leaderboard.
     if (replay.drops.length > MAX_DROPS) {
       setRankResult({ kind: "capacity" });
+      setModal("leaderboard");
       return;
     }
     if (Date.now() > session.expires) {
       setRankResult({ kind: "expired" });
+      setModal("leaderboard");
       return;
     }
     if (!instance.state.over) instance.finish();
@@ -592,7 +608,7 @@ export default function App() {
                 {ranked.session && !submitted && game.score > 0 && (
                   <button
                     className="secondary-button"
-                    onClick={() => setModal("leaderboard")}
+                    onClick={submitCurrentScore}
                   >
                     {t("game.submit")}
                   </button>
@@ -774,7 +790,12 @@ export default function App() {
           }
         >
           {modal === "settings" && (
-            <SettingsPanel bgm={bgm} voices={voices} close={closeModal} />
+            <SettingsPanel
+              bgm={bgm}
+              voices={voices}
+              haptics={haptics}
+              close={closeModal}
+            />
           )}
           {modal === "leaderboard" && (
             <Leaderboard
@@ -854,7 +875,7 @@ export default function App() {
                 game.score > 0 && (
                   <button
                     className="secondary-button full"
-                    onClick={() => setModal("leaderboard")}
+                    onClick={submitCurrentScore}
                   >
                     {t("game.submit")}
                   </button>

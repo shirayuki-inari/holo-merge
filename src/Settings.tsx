@@ -3,13 +3,16 @@ import { useI18n } from "./i18n";
 import { LANGUAGES, type Locale } from "./i18n/core";
 import { BGM_TRACKS } from "./audio/bgm";
 import type { useBackgroundMusic } from "./audio/useBackgroundMusic";
+import { canVibrate } from "./haptics";
 export default function SettingsPanel({
   bgm,
   voices,
+  haptics,
   close,
 }: {
   bgm: ReturnType<typeof useBackgroundMusic>;
   voices: { enabled: boolean; toggle: () => void };
+  haptics: { enabled: boolean; toggle: () => void };
   close: () => void;
 }) {
   const { t, locale, setLocale } = useI18n();
@@ -69,6 +72,23 @@ export default function SettingsPanel({
           <span />
         </button>
       </div>
+      {canVibrate && (
+        <div className="setting-row">
+          <div>
+            <label id="haptics-label">{t("settings.haptics")}</label>
+            <p>{t("settings.hapticsHint")}</p>
+          </div>
+          <button
+            className="setting-switch"
+            role="switch"
+            aria-labelledby="haptics-label"
+            aria-checked={haptics.enabled}
+            onClick={haptics.toggle}
+          >
+            <span />
+          </button>
+        </div>
+      )}
       <div className="setting-row language-setting">
         <label htmlFor="game-language">{t("settings.language")}</label>
         <select

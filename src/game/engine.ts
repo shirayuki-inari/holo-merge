@@ -23,12 +23,23 @@ type Ring = {
   color: string;
   points: number;
 };
+/** A merged-away member sliding into the merge point (visual only). */
+type Ghost = {
+  x: number;
+  y: number;
+  tx: number;
+  ty: number;
+  level: number;
+  life: number;
+};
 interface Options extends SimulationOptions {
   lineup: Talent[];
   labels?: { limit: string; danger: string };
 }
 /** Visual-only grow-in for merged members; physics always uses the full radius. */
 const SPAWN_MS = 170;
+/** How long the two merged members take to slide together and fade. */
+const GHOST_MS = 110;
 /** Held arrow keys steer the aim: start slow for precision, then speed up (px/ms). */
 const STEER_MIN_SPEED = 0.18;
 const STEER_MAX_SPEED = 0.62;
@@ -67,6 +78,7 @@ export class HoloEngine extends Simulation {
   private images: (HTMLImageElement | undefined)[] = [];
   private particles: Particle[] = [];
   private rings: Ring[] = [];
+  private ghosts: Ghost[] = [];
   /** Merged member body id → simulation time it appeared. */
   private spawns = new Map<number, number>();
   /** Positions before the latest physics step, for render interpolation. */
@@ -275,8 +287,12 @@ export class HoloEngine extends Simulation {
     y: number,
     points: number,
     id: number,
+    sources: { x: number; y: number; level: number }[],
   ) {
     this.spawns.set(id, this.time);
+    if (!this.reducedMotion)
+      for (const source of sources)
+        this.ghosts.push({ ...source, tx: x, ty: y, life: 1 });
     this.rings.push({
       x,
       y,
@@ -329,6 +345,12 @@ export class HoloEngine extends Simulation {
       if (ring.life > 0) this.rings[n++] = ring;
     }
     this.rings.length = n;
+    n = 0;
+    for (const ghost of this.ghosts) {
+      ghost.life -= (f * 16.667) / GHOST_MS;
+      if (ghost.life > 0) this.ghosts[n++] = ghost;
+    }
+    this.ghosts.length = n;
     for (const [id, born] of this.spawns)
       if (this.time - born >= SPAWN_MS || !this.orbs.has(id))
         this.spawns.delete(id);
@@ -338,6 +360,7 @@ export class HoloEngine extends Simulation {
     if (
       this.particles.length ||
       this.rings.length ||
+      this.ghosts.length ||
       this.spawns.size ||
       this.dangerProgress > 0 ||
       this.time - this.lastDrop < DROP_COOLDOWN_MS + STEP_MS
@@ -449,6 +472,21 @@ export class HoloEngine extends Simulation {
       c.lineTo(this.x, 15);
       c.fill();
     }
+    // Merged members accelerate into each other, shrink and fade under the new one.
+    for (const g of this.ghosts) {
+      const p = 1 - g.life,
+        k = p * p,
+        r = RADII[g.level] * (1 - 0.3 * p);
+      c.globalAlpha = g.life;
+      c.drawImage(
+        this.sprites[g.level],
+        g.x + (g.tx - g.x) * k - r,
+        g.y + (g.ty - g.y) * k - r,
+        r * 2,
+        r * 2,
+      );
+    }
+    c.globalAlpha = 1;
     const a = this.alpha;
     // Pulse members that are holding the board above the limit line.
     const pulse = 0.55 + 0.45 * Math.sin(this.time / 85);
@@ -490,7 +528,9 @@ export class HoloEngine extends Simulation {
     for (const p of this.particles) {
       c.globalAlpha = p.life;
       c.fillStyle = p.color;
-      c.fillRect(p.x, p.y, 4, 4);
+      c.beginPath();
+      c.arc(p.x, p.y, 1.5 + 1.2 * p.life, 0, Math.PI * 2);
+      c.fill();
     }
     c.globalAlpha = 1;
     c.fillStyle = "#d9eae2";

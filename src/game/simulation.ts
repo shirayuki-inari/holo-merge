@@ -138,12 +138,14 @@ export class Simulation {
       orb.body.position.y - RADII[orb.level] < DANGER_Y
     );
   }
+  /** Rendering hook; `sources` are the two members that just merged. */
   protected onMergeVisual(
     _level: number,
     _x: number,
     _y: number,
     _points: number,
     _id: number,
+    _sources: { x: number; y: number; level: number }[],
   ) {}
   protected addOrb(level: number, x: number, y: number) {
     const body = Bodies.circle(x, y, RADII[level], {
@@ -189,7 +191,10 @@ export class Simulation {
       this.state.combo =
         this.time - this.lastMerge < 1300 ? this.state.combo + 1 : 1;
       this.lastMerge = this.time;
-      this.onMergeVisual(level, x, y, points, body.id);
+      this.onMergeVisual(level, x, y, points, body.id, [
+        { x: a.body.position.x, y: a.body.position.y, level: a.level },
+        { x: b.body.position.x, y: b.body.position.y, level: b.level },
+      ]);
       this.options.onMerge(level);
       if (level === RADII.length - 1 && !this.state.won) {
         this.state.won = true;

@@ -12,6 +12,8 @@ const messages = {
   "settings.trackNumber": "Track {number}",
   "settings.voice": "Character voices",
   "settings.voiceHint": "Voices for merges and reaching the highest level.",
+  "settings.haptics": "Vibration",
+  "settings.hapticsHint": "A light buzz on merges and when a round ends.",
   "settings.language": "Language",
   "settings.saved": "Preferences are saved in this browser.",
   "bgm.off": "Turn off background music",

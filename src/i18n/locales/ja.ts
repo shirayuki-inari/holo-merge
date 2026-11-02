@@ -12,6 +12,8 @@ const messages = {
   "settings.trackNumber": "曲 {number}",
   "settings.voice": "キャラクターボイス",
   "settings.voiceHint": "合成時と最高レベル到達時のボイス。",
+  "settings.haptics": "バイブレーション",
+  "settings.hapticsHint": "合成時と終了時に端末を軽く振動させます。",
   "settings.language": "言語 / Language",
   "settings.saved": "設定はこのブラウザーに保存されます。",
   "bgm.off": "BGM をオフ",
